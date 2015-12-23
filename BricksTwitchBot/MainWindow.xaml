@@ -1,4 +1,4 @@
-﻿<controls:MetroWindow x:Class="WpfApplication1.MainWindow"
+﻿<controls:MetroWindow x:Class="BricksTwitchBot.MainWindow"
             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
             xmlns:controls="http://metro.mahapps.com/winfx/xaml/controls"

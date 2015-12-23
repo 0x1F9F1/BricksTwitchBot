@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.Reflection;
 
-namespace WpfApplication1
+namespace BricksTwitchBot
 {
     internal class Startup
     {

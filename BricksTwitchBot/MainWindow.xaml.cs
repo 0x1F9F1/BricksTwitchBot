@@ -6,10 +6,10 @@ using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using BricksTwitchBot.IrcClient;
 using SharpConfig;
-using WpfApplication1.IrcClient;
 
-namespace WpfApplication1
+namespace BricksTwitchBot
 {
     public partial class MainWindow
     {

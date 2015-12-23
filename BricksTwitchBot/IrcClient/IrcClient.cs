@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Net.Sockets;
 
-namespace WpfApplication1.IrcClient
+namespace BricksTwitchBot.IrcClient
 {
     public class IrcClient
     {

@@ -1,10 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Documents;
 
-namespace WpfApplication1.IrcClient
+namespace BricksTwitchBot.IrcClient
 {
     public static class MessageHandler
     {
@@ -13,35 +12,34 @@ namespace WpfApplication1.IrcClient
             Globals.OnUi(delegate
             {
                 var list = new List<Emote>();
-                var match = Regex.Match(data,
-                    @"^@color=(?<color>#\w{6})?;display-name=(?<name>[^;]+)?;emotes=(?<emote>[^;]*);(?:sent-ts=\d+;)?subscriber=(?<issub>\d);(?:tmi-sent-ts=\d+;)?turbo=(?<isturbo>\d);user-id=(?<userid>\d+);?user-type=(?<usertype>\S*) :(?<secondname>\S+)!\S+@\S+\.tmi\.twitch\.tv PRIVMSG #\w+ :(?<message>.+)$");
+                var match = Globals.MessageMatch.Match(data);
                 var paragraph = new Paragraph();
                 switch (match.Groups["usertype"].Value)
                 {
                     case "mod":
                     {
-                        var image = Globals.FromResource("WpfApplication1.Images.Moderator.png");
+                        var image = Globals.FromResource("BricksTwitchBot.Images.Moderator.png");
                         paragraph.Inlines.Add(image);
                         paragraph.Inlines.Add(new Run(" "));
                     }
                         break;
                     case "admin":
                     {
-                        var image = Globals.FromResource("WpfApplication1.Images.Admin.png");
+                        var image = Globals.FromResource("BricksTwitchBot.Images.Admin.png");
                         paragraph.Inlines.Add(image);
                         paragraph.Inlines.Add(new Run(" "));
                     }
                         break;
                     case "global_mod":
                     {
-                        var image = Globals.FromResource("WpfApplication1.Images.GlobalModerator.png");
+                        var image = Globals.FromResource("BricksTwitchBot.Images.GlobalModerator.png");
                         paragraph.Inlines.Add(image);
                         paragraph.Inlines.Add(new Run(" "));
                     }
                         break;
                     case "staff":
                     {
-                        var image = Globals.FromResource("WpfApplication1.Images.Staff.png");
+                        var image = Globals.FromResource("BricksTwitchBot.Images.Staff.png");
                         paragraph.Inlines.Add(image);
                         paragraph.Inlines.Add(new Run(" "));
                     }
@@ -49,12 +47,12 @@ namespace WpfApplication1.IrcClient
                 }
                 if (match.Groups["isturbo"].Value.Equals("1"))
                 {
-                    paragraph.Inlines.Add(Globals.FromResource("WpfApplication1.Images.Turbo.png"));
+                    paragraph.Inlines.Add(Globals.FromResource("BricksTwitchBot.Images.Turbo.png"));
                     paragraph.Inlines.Add(new Run(" "));
                 }
                 if (match.Groups["issub"].Value.Equals("1"))
                 {
-                    paragraph.Inlines.Add(Globals.FromResource("WpfApplication1.Images.Subscriber.png"));
+                    paragraph.Inlines.Add(Globals.FromResource("BricksTwitchBot.Images.Subscriber.png"));
                     paragraph.Inlines.Add(new Run(" "));
                 }
                 paragraph.Inlines.Add(

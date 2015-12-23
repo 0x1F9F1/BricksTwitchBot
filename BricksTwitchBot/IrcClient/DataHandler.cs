@@ -4,48 +4,20 @@ using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media;
 
-namespace WpfApplication1.IrcClient
+namespace BricksTwitchBot.IrcClient
 {
     public static class DataHandler
     {
-        private const string MessageMatch =
-            @"^@color=(?<color>#\w{6})?;display-name=(?<name>[^;]+)?;emotes=(?<emote>[^;]*);(?:sent-ts=\d+;)?subscriber=(?<issub>\d);(?:tmi-sent-ts=\d+;)?turbo=(?<isturbo>\d);user-id=(?<userid>\d+);?user-type=(?<usertype>\S*) :(?<secondname>\S+)!\S+@\S+\.tmi\.twitch\.tv PRIVMSG #\w+ :(?<message>.+)$";
-
-        private const string ModeMatch = @":jtv MODE #\S+ (?<change>[+-])o (?<user>\S+)";
-        private const string PingMatch = @"PING :(?<ip>\S+)";
-        private const string TimeoutMatch = @":tmi\.twitch\.tv CLEARCHAT #\S+ :(?<user>\S+)";
-
-        private const string NotifyMatch =
-            @":twitchnotify!twitchnotify@twitchnotify.tmi.twitch.tv PRIVMSG #\S+ :(?<message>.+)";
-
-        private const string CapAckMatch = @":tmi\.twitch\.tv CAP \* ACK :(?<cap>.+)";
-        private const string CodeMatch = @":tmi\.twitch\.tv (?<code>\d{3}) \S+ :(?<message>.+)";
-        private const string Code2Match = @":\S+\.tmi\.twitch\.tv (?<code>\d{3}) \S+ = #\S+ :(?<message>.+)";
-        private const string Code3Match = @":\S+\.tmi\.twitch\.tv (?<code>\d{3}) \S+ #\S+ :(?<message>.+)";
-        private const string JoinMatch = @":\S+!\S+@(?<name>\S+)\.tmi\.twitch\.tv JOIN #\S+";
-        private const string PartMatch = @":\S+!\S+@(?<name>\S+)\.tmi\.twitch\.tv PART #\S+";
-
-        private const string GlobalUserStateMatch =
-            "@color=(?<color>#\\d{6})?;display-name=(?<name>\\S+);emote-sets=(?<emotesets>\\S+);turbo=(?<isturbo>\\d);user-id=(?<userid>\\d+);user-type=(?<usertype>\\S*) :tmi\\.twitch\\.tv GLOBALUSERSTATE";
-
-        private const string UserStateMatch =
-            "@color=(?<color>#\\d{6})?;display-name=(?<name>\\S+);emote-sets=(?<emotesets>\\S+);subscriber=(?<issub>\\d);turbo=(?<isturbo>\\d);user-type=(?<usertype>\\S*) :tmi\\.twitch\\.tv USERSTATE #\\S+";
-
-        private const string RoomStateMatch =
-            "@broadcaster-lang=(?<lang>\\S+)?;r9k=(?<isr9k>\\d);slow=(?<isslow>\\d+);subs-only=(?<issub>\\d) :tmi\\.twitch\\.tv ROOMSTATE #\\S+";
-
-        private const string NoticeMatch = "@msg-id=(?<msgid>\\S+) :tmi\\.twitch\\.tv NOTICE #\\S+ :(?<message>.+)";
-
         public static void HandleData(string data)
         {
             Match match;
-            if ((match = Regex.Match(data, MessageMatch)).Success)
+            if ((match = Globals.MessageMatch.Match(data)).Success)
             {
                 MessageHandler.HandleMessage(data);
             }
-            else if ((match = Regex.Match(data, ModeMatch)).Success)
+            else if ((match = Globals.ModeMatch.Match(data)).Success)
             {
-                Globals.OnUi(() =>
+                Globals.OnUi(delegate
                 {
                     var paragraph = new Paragraph();
                     var inlines = paragraph.Inlines;
@@ -61,11 +33,11 @@ namespace WpfApplication1.IrcClient
                     Globals.ChatTextBoxQueue.Enqueue(paragraph);
                 });
             }
-            else if ((match = Regex.Match(data, PingMatch)).Success)
+            else if ((match = Globals.PingMatch.Match(data)).Success)
             {
                 Globals.IrcClient.WriteOther($"PONG {match.Groups["ip"].Value}");
             }
-            else if ((match = Regex.Match(data, TimeoutMatch)).Success)
+            else if ((match = Globals.TimeoutMatch.Match(data)).Success)
             {
                 Globals.OnUi(delegate
                 {
@@ -81,7 +53,7 @@ namespace WpfApplication1.IrcClient
                     Globals.ChatTextBoxQueue.Enqueue(paragraph);
                 });
             }
-            else if ((match = Regex.Match(data, NotifyMatch)).Success)
+            else if ((match = Globals.NotifyMatch.Match(data)).Success)
             {
                 Globals.OnUi(delegate
                 {
@@ -97,7 +69,7 @@ namespace WpfApplication1.IrcClient
                     Globals.ChatTextBoxQueue.Enqueue(paragraph);
                 });
             }
-            else if ((match = Regex.Match(data, CapAckMatch)).Success)
+            else if ((match = Globals.CapAckMatch.Match(data)).Success)
             {
                 Globals.OnUi(delegate
                 {
@@ -113,7 +85,7 @@ namespace WpfApplication1.IrcClient
                     Globals.ChatTextBoxQueue.Enqueue(paragraph);
                 });
             }
-            else if ((match = Regex.Match(data, CodeMatch)).Success)
+            else if ((match = Globals.CodeMatch.Match(data)).Success)
             {
                 Globals.OnUi(delegate
                 {
@@ -137,7 +109,7 @@ namespace WpfApplication1.IrcClient
                     Globals.ChatTextBoxQueue.Enqueue(paragraph);
                 });
             }
-            else if ((match = Regex.Match(data, Code2Match)).Success)
+            else if ((match = Globals.Code2Match.Match(data)).Success)
             {
                 Globals.OnUi(delegate
                 {
@@ -161,7 +133,7 @@ namespace WpfApplication1.IrcClient
                     Globals.ChatTextBoxQueue.Enqueue(paragraph);
                 });
             }
-            else if ((match = Regex.Match(data, Code3Match)).Success)
+            else if ((match = Globals.Code3Match.Match(data)).Success)
             {
                 Globals.OnUi(delegate
                 {
@@ -185,7 +157,7 @@ namespace WpfApplication1.IrcClient
                     Globals.ChatTextBoxQueue.Enqueue(paragraph);
                 });
             }
-            else if ((match = Regex.Match(data, JoinMatch)).Success)
+            else if ((match = Globals.JoinMatch.Match(data)).Success)
             {
                 Globals.OnUi(delegate
                 {
@@ -201,7 +173,7 @@ namespace WpfApplication1.IrcClient
                     Globals.ChatTextBoxQueue.Enqueue(paragraph);
                 });
             }
-            else if ((match = Regex.Match(data, PartMatch)).Success)
+            else if ((match = Globals.PartMatch.Match(data)).Success)
             {
                 Globals.OnUi(delegate
                 {
@@ -219,7 +191,7 @@ namespace WpfApplication1.IrcClient
                     Globals.ChatTextBoxQueue.Enqueue(paragraph);
                 });
             }
-            else if ((match = Regex.Match(data, GlobalUserStateMatch)).Success)
+            else if ((match = Globals.GlobalUserStateMatch.Match(data)).Success)
             {
                 Globals.OnUi(delegate
                 {
@@ -227,31 +199,31 @@ namespace WpfApplication1.IrcClient
                     var str = match.Groups["usertype"].Value;
                     if (str == "mod")
                     {
-                        var image = Globals.FromResource("WpfApplication1.Images.Moderator.png");
+                        var image = Globals.FromResource("BricksTwitchBot.Images.Moderator.png");
                         paragraph.Inlines.Add(image);
                         paragraph.Inlines.Add(new Run(" "));
                     }
                     if (str == "global_mod")
                     {
-                        var image = Globals.FromResource("WpfApplication1.Images.GlobalModerator.png");
+                        var image = Globals.FromResource("BricksTwitchBot.Images.GlobalModerator.png");
                         paragraph.Inlines.Add(image);
                         paragraph.Inlines.Add(new Run(" "));
                     }
                     if (str == "admin")
                     {
-                        var image = Globals.FromResource("WpfApplication1.Images.Admin.png");
+                        var image = Globals.FromResource("BricksTwitchBot.Images.Admin.png");
                         paragraph.Inlines.Add(image);
                         paragraph.Inlines.Add(new Run(" "));
                     }
                     if (str == "staff")
                     {
-                        var image = Globals.FromResource("WpfApplication1.Images.Staff.png");
+                        var image = Globals.FromResource("BricksTwitchBot.Images.Staff.png");
                         paragraph.Inlines.Add(image);
                         paragraph.Inlines.Add(new Run(" "));
                     }
                     if (match.Groups["isturbo"].Value == "1")
                     {
-                        var image = Globals.FromResource("WpfApplication1.Images.Turbo.png");
+                        var image = Globals.FromResource("BricksTwitchBot.Images.Turbo.png");
                         paragraph.Inlines.Add(image);
                         paragraph.Inlines.Add(new Run(" "));
                     }
@@ -268,7 +240,7 @@ namespace WpfApplication1.IrcClient
                     Globals.MessageStart = paragraph;
                 });
             }
-            else if ((match = Regex.Match(data, UserStateMatch)).Success)
+            else if ((match = Globals.UserStateMatch.Match(data)).Success)
             {
                 Globals.OnUi(delegate
                 {
@@ -276,37 +248,37 @@ namespace WpfApplication1.IrcClient
                     var str = match.Groups["usertype"].Value;
                     if (str == "mod")
                     {
-                        var image = Globals.FromResource("WpfApplication1.Images.Moderator.png");
+                        var image = Globals.FromResource("BricksTwitchBot.Images.Moderator.png");
                         paragraph.Inlines.Add(image);
                         paragraph.Inlines.Add(new Run(" "));
                     }
                     if (str == "global_mod")
                     {
-                        var image = Globals.FromResource("WpfApplication1.Images.GlobalModerator.png");
+                        var image = Globals.FromResource("BricksTwitchBot.Images.GlobalModerator.png");
                         paragraph.Inlines.Add(image);
                         paragraph.Inlines.Add(new Run(" "));
                     }
                     if (str == "admin")
                     {
-                        var image = Globals.FromResource("WpfApplication1.Images.Admin.png");
+                        var image = Globals.FromResource("BricksTwitchBot.Images.Admin.png");
                         paragraph.Inlines.Add(image);
                         paragraph.Inlines.Add(new Run(" "));
                     }
                     if (str == "staff")
                     {
-                        var image = Globals.FromResource("WpfApplication1.Images.Staff.png");
+                        var image = Globals.FromResource("BricksTwitchBot.Images.Staff.png");
                         paragraph.Inlines.Add(image);
                         paragraph.Inlines.Add(new Run(" "));
                     }
                     if (match.Groups["isturbo"].Value == "1")
                     {
-                        var image = Globals.FromResource("WpfApplication1.Images.Turbo.png");
+                        var image = Globals.FromResource("BricksTwitchBot.Images.Turbo.png");
                         paragraph.Inlines.Add(image);
                         paragraph.Inlines.Add(new Run(" "));
                     }
                     if (match.Groups["issub"].Value == "1")
                     {
-                        var image = Globals.FromResource("WpfApplication1.Images.Subscriber.png");
+                        var image = Globals.FromResource("BricksTwitchBot.Images.Subscriber.png");
                         paragraph.Inlines.Add(image);
                         paragraph.Inlines.Add(new Run(" "));
                     }
@@ -323,9 +295,9 @@ namespace WpfApplication1.IrcClient
                     Globals.MessageStart = paragraph;
                 });
             }
-            else if ((match = Regex.Match(data, RoomStateMatch)).Success)
+            else if ((match = Globals.RoomStateMatch.Match(data)).Success)
             {
-                Globals.OnUi(() =>
+                Globals.OnUi(delegate
                 {
                     var list = new List<string>();
                     if (match.Groups["issub"].Value == "1")
@@ -343,9 +315,9 @@ namespace WpfApplication1.IrcClient
                     Globals.ChatStatusBox.Text = string.Join(",", list);
                 });
             }
-            else if ((match = Regex.Match(data, NoticeMatch)).Success)
+            else if ((match = Globals.NoticeMatch.Match(data)).Success)
             {
-                Globals.OnUi(() =>
+                Globals.OnUi(delegate
                 {
                     var paragraph = new Paragraph();
                     var inlines = paragraph.Inlines;
@@ -359,7 +331,7 @@ namespace WpfApplication1.IrcClient
             }
             else
             {
-                Globals.OnUi(() =>
+                Globals.OnUi(delegate
                 {
                     var concurrentQueue = Globals.ChatTextBoxQueue;
                     var paragraph = new Paragraph(new Run(data)
