@@ -193,52 +193,52 @@ namespace BricksTwitchBot.IrcClient
             }
             else if ((match = Globals.GlobalUserStateMatch.Match(data)).Success)
             {
-                Globals.OnUi(delegate
-                {
-                    var paragraph = new Paragraph();
-                    var str = match.Groups["usertype"].Value;
-                    if (str == "mod")
-                    {
-                        var image = Globals.FromResource("BricksTwitchBot.Images.Moderator.png");
-                        paragraph.Inlines.Add(image);
-                        paragraph.Inlines.Add(new Run(" "));
-                    }
-                    if (str == "global_mod")
-                    {
-                        var image = Globals.FromResource("BricksTwitchBot.Images.GlobalModerator.png");
-                        paragraph.Inlines.Add(image);
-                        paragraph.Inlines.Add(new Run(" "));
-                    }
-                    if (str == "admin")
-                    {
-                        var image = Globals.FromResource("BricksTwitchBot.Images.Admin.png");
-                        paragraph.Inlines.Add(image);
-                        paragraph.Inlines.Add(new Run(" "));
-                    }
-                    if (str == "staff")
-                    {
-                        var image = Globals.FromResource("BricksTwitchBot.Images.Staff.png");
-                        paragraph.Inlines.Add(image);
-                        paragraph.Inlines.Add(new Run(" "));
-                    }
-                    if (match.Groups["isturbo"].Value == "1")
-                    {
-                        var image = Globals.FromResource("BricksTwitchBot.Images.Turbo.png");
-                        paragraph.Inlines.Add(image);
-                        paragraph.Inlines.Add(new Run(" "));
-                    }
-                    var rgb = match.Groups["color"].Success ? match.Groups["color"].Value : "#000000";
-                    var text = match.Groups["name"].Value.Replace("\\s", " ");
-                    var inlines = paragraph.Inlines;
-                    var run = new Run(text)
-                    {
-                        Foreground = Globals.RgbToBrush(rgb),
-                        FontWeight = FontWeights.Bold
-                    };
-                    inlines.Add(run);
-                    paragraph.Inlines.Add(new Run(": "));
-                    Globals.MessageStart = paragraph;
-                });
+                //Globals.OnUi(delegate
+                //{
+                //    var paragraph = new Paragraph();
+                //    var str = match.Groups["usertype"].Value;
+                //    if (str == "mod")
+                //    {
+                //        var image = Globals.FromResource("BricksTwitchBot.Images.Moderator.png");
+                //        paragraph.Inlines.Add(image);
+                //        paragraph.Inlines.Add(new Run(" "));
+                //    }
+                //    if (str == "global_mod")
+                //    {
+                //        var image = Globals.FromResource("BricksTwitchBot.Images.GlobalModerator.png");
+                //        paragraph.Inlines.Add(image);
+                //        paragraph.Inlines.Add(new Run(" "));
+                //    }
+                //    if (str == "admin")
+                //    {
+                //        var image = Globals.FromResource("BricksTwitchBot.Images.Admin.png");
+                //        paragraph.Inlines.Add(image);
+                //        paragraph.Inlines.Add(new Run(" "));
+                //    }
+                //    if (str == "staff")
+                //    {
+                //        var image = Globals.FromResource("BricksTwitchBot.Images.Staff.png");
+                //        paragraph.Inlines.Add(image);
+                //        paragraph.Inlines.Add(new Run(" "));
+                //    }
+                //    if (match.Groups["isturbo"].Value == "1")
+                //    {
+                //        var image = Globals.FromResource("BricksTwitchBot.Images.Turbo.png");
+                //        paragraph.Inlines.Add(image);
+                //        paragraph.Inlines.Add(new Run(" "));
+                //    }
+                //    var rgb = match.Groups["color"].Success ? match.Groups["color"].Value : "#000000";
+                //    var text = match.Groups["name"].Value.Replace("\\s", " ");
+                //    var inlines = paragraph.Inlines;
+                //    var run = new Run(text)
+                //    {
+                //        Foreground = Globals.RgbToBrush(rgb),
+                //        FontWeight = FontWeights.Bold
+                //    };
+                //    inlines.Add(run);
+                //    paragraph.Inlines.Add(new Run(": "));
+                //    Globals.MessageStart = paragraph;
+                //});
             }
             else if ((match = Globals.UserStateMatch.Match(data)).Success)
             {
