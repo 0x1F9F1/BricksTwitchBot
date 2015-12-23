@@ -1,13 +1,15 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media;
 
-namespace BricksTwitchBot.IrcClient
+namespace BricksTwitchBot.Irc
 {
     public static class DataHandler
     {
+        static List<string> roomStateList = new List<string>();
         public static void HandleData(string data)
         {
             Match match;
@@ -282,37 +284,56 @@ namespace BricksTwitchBot.IrcClient
                         paragraph.Inlines.Add(image);
                         paragraph.Inlines.Add(new Run(" "));
                     }
-                    var rgb = match.Groups["color"].Success ? match.Groups["color"].Value : "#000000";
-                    var text = match.Groups["name"].Value.Replace("\\s", " ");
-                    var inlines = paragraph.Inlines;
-                    var run = new Run(text)
+                    paragraph.Inlines.Add(new Run(match.Groups["name"].Value.Replace("\\s", " "))
                     {
-                        Foreground = Globals.RgbToBrush(rgb),
+                        Foreground = Globals.RgbToBrush(match.Groups["color"].Value),
                         FontWeight = FontWeights.Bold
-                    };
-                    inlines.Add(run);
+                    });
                     paragraph.Inlines.Add(new Run(": "));
-                    Globals.MessageStart = paragraph;
+                    Globals.MessageStart = paragraph.Inlines.ToArray();
                 });
             }
             else if ((match = Globals.RoomStateMatch.Match(data)).Success)
             {
                 Globals.OnUi(delegate
                 {
-                    var list = new List<string>();
-                    if (match.Groups["issub"].Value == "1")
+                    Group group;
+                    if ((group = match.Groups["isSub"]).Success)
                     {
-                        list.Add("Sub");
+                        if (group.Value == "1")
+                        {
+                            roomStateList.Add("Sub-Only");
+                        }
+                        else
+                        {
+                            roomStateList.Remove("Sub-Only");
+                        }
                     }
-                    if (match.Groups["isr9k"].Value == "1")
+                    if ((group = match.Groups["isr9k"]).Success)
                     {
-                        list.Add("r9k");
+                        if (group.Value == "1")
+                        {
+                            roomStateList.Add("R9K");
+                        }
+                        else
+                        {
+                            roomStateList.Remove("R9K");
+                        }
                     }
-                    if (match.Groups["isslow"].Value != "0")
+                    if ((group = match.Groups["isSlow"]).Success)
                     {
-                        list.Add($"Slow: {match.Groups["isslow"].Value}");
+                        int parsed = int.Parse(group.Value);
+                        if (parsed > 0)
+                        {
+                            roomStateList.RemoveAll(s => s.StartsWith("Slow"));
+                            roomStateList.Add($"Slow ({parsed})");
+                        }
+                        else
+                        {
+                            roomStateList.RemoveAll(s => s.StartsWith("Slow"));
+                        }
                     }
-                    Globals.ChatStatusBox.Text = string.Join(",", list);
+                    Globals.ChatStatusBox.Content = string.Join(" | ", roomStateList);
                 });
             }
             else if ((match = Globals.NoticeMatch.Match(data)).Success)

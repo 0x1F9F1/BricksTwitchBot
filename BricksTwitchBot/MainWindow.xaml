@@ -5,7 +5,7 @@
             Loaded="MainWindow_Loaded" x:Name="MainForm" Window.Title="Brick's Twitch Bot"
             FrameworkElement.Height="375" FrameworkElement.Width="550" Window.ResizeMode="CanResizeWithGrip"
             FrameworkElement.MinWidth="550" FrameworkElement.MinHeight="375"
-            ShowIconOnTitleBar="false" Closing="MainForm_Closing">
+            ShowIconOnTitleBar="false" Closing="MainForm_Closing" Icon="Images/icon.ico">
     <Grid>
         <TabControl x:Name="TabControl" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch">
             <TabItem Header="Chat">
@@ -13,17 +13,19 @@
                     <RichTextBox x:Name="ChatTextBox" Margin="5,5,5,36" Block.LineHeight="4" IsReadOnly="true"
                        TextOptions.TextFormattingMode="Display" VerticalContentAlignment="Center"
                        VerticalScrollBarVisibility="Visible">
-                        <FlowDocument/>
+                        <FlowDocument>
+                            <Paragraph/>
+                        </FlowDocument>
                     </RichTextBox>
                     <TextBox KeyDown="ChatInput_KeyDown" x:Name="ChatInput" Margin="5,0,90,4" TextWrapping="Wrap"
                    VerticalAlignment="Bottom" Height="20"/>
                     <Button Click="ChatButton_Click" x:Name="ChatButton" Content="Chat" VerticalAlignment="Bottom"
                   HorizontalAlignment="Right" Width="80" Margin="0,0,5,5" Height="20"/>
-                    <TextBox x:Name="ChatStatusBox" HorizontalAlignment="Right" Margin="0,10,20,0" TextWrapping="Wrap"
-                   VerticalAlignment="Top" Height="20" Width="120" Background="#CCFFFFFF" IsReadOnly="true"
-                   IsInactiveSelectionHighlightEnabled="true" BorderThickness="0" HorizontalContentAlignment="Right"
-                   VerticalContentAlignment="Center" SelectionOpacity="0" BorderBrush="{x:Null}"
-                   SelectionBrush="{x:Null}"/>
+                    <Label x:Name="ChatStatusBox" Margin="10,10,23,0"
+                   VerticalAlignment="Top" Height="25" Background="#00000000"
+                    BorderThickness="0" HorizontalContentAlignment="Right"
+                   VerticalContentAlignment="Center" BorderBrush="{x:Null}" Content=""
+                   />
                 </Grid>
             </TabItem>
             <TabItem Header="Log">

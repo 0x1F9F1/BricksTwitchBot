@@ -1,15 +1,14 @@
 ﻿using System;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Markup;
 using System.Windows.Media;
-using BricksTwitchBot.IrcClient;
+using BricksTwitchBot.Irc;
 using SharpConfig;
 
 namespace BricksTwitchBot
@@ -41,8 +40,8 @@ namespace BricksTwitchBot
             Globals.WindowDispatcher = Dispatcher;
             Globals.ChatStatusBox = ChatStatusBox;
             Globals.fontFamily = new FontFamily("Helvetica Neue");
-            Globals.logWriter = File.AppendText("Logging.txt");
-            Globals.logWriter.AutoFlush = true;
+            Globals.LogWriter = File.AppendText("Logging.txt");
+            Globals.LogWriter.AutoFlush = true;
 
             UsernameInputBox.Text = Globals.OptionsConfig["Options"]["Username"].StringValue;
             OauthInputBox.Password = Globals.OptionsConfig["Options"]["Oauth"].StringValue;
@@ -70,7 +69,7 @@ namespace BricksTwitchBot
 
         private void StartIrcClient()
         {
-            Globals.IrcClient = new IrcClient.IrcClient(
+            Globals.IrcClient = new IrcClient(
                 Globals.OptionsConfig["Options"]["Username"].StringValue,
                 Globals.OptionsConfig["Options"]["Oauth"].StringValue,
                 Globals.OptionsConfig["Options"]["ChannelToJoin"].StringValue);
@@ -84,7 +83,7 @@ namespace BricksTwitchBot
                 }
                 else
                 {
-                    Thread.Sleep(100);
+                    Thread.Sleep(500);
                 }
             }
         }
@@ -98,17 +97,16 @@ namespace BricksTwitchBot
                 {
                     Globals.OnUi(delegate
                     {
-                        var inlines = paragraph.Inlines;
-                        var run = new Run($"{DateTime.Now:t} ")
+                        paragraph.Inlines.InsertBefore(paragraph.Inlines.FirstInline, 
+                            new Run($"{DateTime.Now:t} ")
                         {
                             FontSize = 9.0,
                             Foreground = new SolidColorBrush(Colors.Gray)
-                        };
-                        inlines.InsertBefore(paragraph.Inlines.FirstInline, run);
+                        });
                         paragraph.FontFamily = Globals.fontFamily;
                         var textRange = new TextRange(paragraph.ContentStart, paragraph.ContentEnd);
                         textRange.ApplyPropertyValue(Inline.BaselineAlignmentProperty, BaselineAlignment.Center);
-                        Globals.logWriter.WriteLine(textRange.Text);
+                        Globals.LogWriter.WriteLine(textRange.Text);
                         ChatTextBox.Document.Blocks.Add(paragraph);
                         if ((!ChatTextBox.IsSelectionActive || ChatTextBox.Selection.Text.Length == 0) &&
                             !(ChatTextBox.VerticalOffset + ChatTextBox.ViewportHeight < ChatTextBox.ExtentHeight - 50.0))
@@ -119,7 +117,7 @@ namespace BricksTwitchBot
                 }
                 else
                 {
-                    Thread.Sleep(100);
+                    Thread.Sleep(500);
                 }
             }
         }
@@ -137,20 +135,25 @@ namespace BricksTwitchBot
             }
         }
 
-
         private void ChatButton_Click(object sender, RoutedEventArgs e)
         {
-            if (Globals.IrcClient != null && Globals.IrcClient.Connected)
+            if (Globals.IrcClient != null && Globals.IrcClient.Connected /*&& Globals.MessageStart.Inlines.Count > 0*/)
             {
-                var paragraph = new Paragraph();
-                Inline[] inlines = new Inline[Globals.MessageStart.Inlines.Count];
-                Globals.MessageStart.Inlines.CopyTo(inlines, 0);
-                
-                paragraph.Inlines.AddRange(inlines);
-                paragraph.Inlines.Add(new Run(ChatInput.Text));
-                Globals.ChatTextBoxQueue.Enqueue(paragraph);
-                Globals.IrcClient.WriteMessage(ChatInput.Text);
-                ChatInput.Clear();
+                var text = ChatInput.Text;
+                if (text.Length > 0)
+                {
+                    var paragraph = new Paragraph();
+                    foreach (Inline inline in Globals.MessageStart)
+                    {
+                        paragraph.Inlines.Add(inline);
+                    }
+                    //paragraph.Inlines.AddRange(Globals.MessageStart.AsEnumerable());
+
+                    paragraph.Inlines.Add(new Run(text));
+                    Globals.ChatTextBoxQueue.Enqueue(paragraph);
+                    Globals.IrcClient.WriteMessage(text);
+                    ChatInput.Clear();
+                }
             }
         }
 
@@ -203,7 +206,7 @@ namespace BricksTwitchBot
         {
             Globals.Running = false;
             Globals.OptionsConfig.SaveToFile("TwitchBot.ini");
-            Globals.logWriter.Close();
+            Globals.LogWriter.Close();
         }
     }
 }

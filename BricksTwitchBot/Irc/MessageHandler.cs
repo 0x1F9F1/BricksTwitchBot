@@ -3,7 +3,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Documents;
 
-namespace BricksTwitchBot.IrcClient
+namespace BricksTwitchBot.Irc
 {
     public static class MessageHandler
     {

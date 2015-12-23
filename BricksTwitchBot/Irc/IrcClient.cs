@@ -1,41 +1,35 @@
 ﻿using System.IO;
 using System.Net.Sockets;
 
-namespace BricksTwitchBot.IrcClient
+namespace BricksTwitchBot.Irc
 {
     public class IrcClient
     {
-        private readonly string Channel;
-        private readonly string Username;
+        private readonly string _channel;
+        private readonly string _username;
+
         public StreamReader StreamReader;
         public StreamWriter StreamWriter;
         public TcpClient TcpClient;
 
-        public bool Connected
-        {
-            get
-            {
-                return TcpClient.Connected;
-            }
-        }
+        public bool Connected => TcpClient.Connected;
 
         public IrcClient(string username, string oauth, string channel)
         {
             TcpClient = new TcpClient("irc.twitch.tv", 6667);
-            StreamReader = new StreamReader((Stream)TcpClient.GetStream());
-            StreamWriter = new StreamWriter((Stream)TcpClient.GetStream())
+            StreamReader = new StreamReader(TcpClient.GetStream());
+            StreamWriter = new StreamWriter(TcpClient.GetStream())
             {
                 AutoFlush = true
             };
-            Channel = channel.ToLower();
-            Username = username.ToLower();
+            _channel = channel.ToLower();
+            _username = username.ToLower();
             WriteOther("CAP REQ :twitch.tv/membership");
             WriteOther("CAP REQ :twitch.tv/commands");
             WriteOther("CAP REQ :twitch.tv/tags");
-            WriteOther("USER " + Username + " irc twitch");
-            WriteOther("PASS " + oauth);
-            WriteOther("NICK " + Username);
-            WriteOther("JOIN #" + Channel);
+            WriteOther($"PASS {oauth}");
+            WriteOther($"NICK {_username}");
+            WriteOther($"JOIN #{_channel}");
         }
 
         public string ReadData()
@@ -50,14 +44,14 @@ namespace BricksTwitchBot.IrcClient
             }
         }
 
-        public void WriteOther(string o)
+        public void WriteOther(string other)
         {
-            StreamWriter.WriteLine(o);
+            StreamWriter.WriteLine(other);
         }
 
-        public void WriteMessage(string m)
+        public void WriteMessage(string message)
         {
-            StreamWriter.WriteLine("PRIVMSG #{0} :{1}", (object)Channel, (object)m);
+            StreamWriter.WriteLine("PRIVMSG #{0} :{1}", _channel, message);
         }
 
         public void Disconnect()
