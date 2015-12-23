@@ -125,7 +125,7 @@
     <EmbeddedResource Include="Images\Admin.png" />
     <EmbeddedResource Include="Images\Broadcaster.png" />
     <EmbeddedResource Include="Images\GlobalModerator.png" />
-    <EmbeddedResource Include="Images\icon.ico" />
+    <Resource Include="Images\icon.ico" />
     <EmbeddedResource Include="Images\Moderator.png" />
     <EmbeddedResource Include="Images\Staff.png" />
     <EmbeddedResource Include="Images\Subscriber.png" />
