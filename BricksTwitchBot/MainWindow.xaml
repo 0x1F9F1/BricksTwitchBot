@@ -60,7 +60,8 @@
                     <TextBox LostFocus="ChannelToJoinInput_LostFocus" x:Name="ChannelToJoinInput" Height="23"
                    Margin="120,171,5,0" TextWrapping="Wrap" VerticalAlignment="Top" VerticalContentAlignment="Center"/>
                     <CheckBox Click="AutoConnectCheckBox_Click" x:Name="AutoConnectCheckBox" Content="Auto-Connect" Height="23"
-                    Margin="120,202,5,0" VerticalAlignment="Top" VerticalContentAlignment="Center" IsChecked="True"/>
+                    Margin="120,202,0,0" VerticalAlignment="Top" VerticalContentAlignment="Center" IsChecked="True" HorizontalAlignment="Left" Width="100"/>
+                    <CheckBox x:Name="AnonymousCheckBox" Content="Anonymous" HorizontalAlignment="Left" Margin="225,202,0,0" VerticalAlignment="Top" Height="23" Width="90" Click="AnonymousCheckBox_Click"/>
                 </Grid>
             </TabItem>
             <TabItem Header="Options" HorizontalAlignment="Left" VerticalAlignment="Top">

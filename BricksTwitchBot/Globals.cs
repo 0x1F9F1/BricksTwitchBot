@@ -83,10 +83,9 @@ namespace BricksTwitchBot
 
         public static Image FromResource(string path)
         {
-            Assembly assembly = Assembly.GetExecutingAssembly();
             var bitmapImage = new BitmapImage();
             bitmapImage.BeginInit();
-            bitmapImage.StreamSource = assembly.GetManifestResourceStream($"{assembly.GetName().Name}.{path}");
+            bitmapImage.StreamSource = GetResourceStream(path);
             bitmapImage.EndInit();
             return new Image
             {
@@ -95,6 +94,13 @@ namespace BricksTwitchBot
                 MaxWidth = bitmapImage.PixelHeight
             };
         }
+
+        public static Stream GetResourceStream(string path)
+        {
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            return assembly.GetManifestResourceStream($"{assembly.GetName().Name}.{path}");
+        }
+
         public static void SaveConfig()
         {
             OptionsConfig.SaveToFile("TwitchBot.ini");

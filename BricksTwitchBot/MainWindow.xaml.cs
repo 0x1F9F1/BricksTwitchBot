@@ -27,7 +27,7 @@ namespace BricksTwitchBot
             if (!File.Exists("TwitchBot.Ini"))
             {
                 using (var manifestResourceStream =
-                        Assembly.GetExecutingAssembly().GetManifestResourceStream("TwitchBot.ini"))
+                        Globals.GetResourceStream("TwitchBot.ini"))
                 {
                     using (var fileStream = new FileStream("TwitchBot.ini", FileMode.Create, FileAccess.Write))
                     {
@@ -49,6 +49,7 @@ namespace BricksTwitchBot
             OauthInputBox.Password = Globals.OptionsConfig["Options"]["Oauth"].StringValue;
             ChannelToJoinInput.Text = Globals.OptionsConfig["Options"]["ChannelToJoin"].StringValue;
             AutoConnectCheckBox.IsChecked = Globals.OptionsConfig["Options"]["Auto-Connect"].BoolValue;
+            AnonymousCheckBox.IsChecked = Globals.OptionsConfig["Options"]["Anonymous"].BoolValue;
 
             new Thread(ChatBoxUpdateThread)
             {
@@ -235,10 +236,13 @@ namespace BricksTwitchBot
             {
                 IsBackground = true
             }.Start();
-            new Thread(StartChatClient)
+            if (!AnonymousCheckBox.IsChecked ?? false)
             {
-                IsBackground = true
-            }.Start();
+                new Thread(StartChatClient)
+                {
+                    IsBackground = true
+                }.Start();
+            }
         }
 
         private void Disconnect()
@@ -268,6 +272,12 @@ namespace BricksTwitchBot
         private void AutoConnectCheckBox_Click(object sender, RoutedEventArgs e)
         {
             Globals.OptionsConfig["Options"]["Auto-Connect"].SetValue(AutoConnectCheckBox.IsChecked);
+            Globals.SaveConfig();
+        }
+
+        private void AnonymousCheckBox_Click(object sender, RoutedEventArgs e)
+        {
+            Globals.OptionsConfig["Options"]["Anonymous"].SetValue(AnonymousCheckBox.IsChecked);
             Globals.SaveConfig();
         }
 
