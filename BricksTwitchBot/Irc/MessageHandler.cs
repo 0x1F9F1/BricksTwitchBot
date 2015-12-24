@@ -13,170 +13,136 @@ namespace BricksTwitchBot.Irc
     {
         public static void HandleMessage(string data)
         {
-            Globals.OnUi(delegate
+            Match match;
+            if ((match = Globals.MessageMatch.Match(data)).Success)
             {
-                var match = Globals.MessageMatch.Match(data);
-                var paragraph = new Paragraph();
-                switch (match.Groups["usertype"].Value)
+                Globals.OnUi(delegate
                 {
-                    case "mod":
+                    var paragraph = new Paragraph();
+                    switch (match.Groups["usertype"].Value)
                     {
-                        var image = Globals.FromResource("Images.Moderator.png");
-                        paragraph.Inlines.Add(image);
-                        paragraph.Inlines.Add(new Run(" "));
-                    }
-                        break;
-                    case "admin":
-                    {
-                        var image = Globals.FromResource("Images.Admin.png");
-                        paragraph.Inlines.Add(image);
-                        paragraph.Inlines.Add(new Run(" "));
-                    }
-                        break;
-                    case "global_mod":
-                    {
-                        var image = Globals.FromResource("Images.GlobalModerator.png");
-                        paragraph.Inlines.Add(image);
-                        paragraph.Inlines.Add(new Run(" "));
-                    }
-                        break;
-                    case "staff":
-                    {
-                        var image = Globals.FromResource("Images.Staff.png");
-                        paragraph.Inlines.Add(image);
-                        paragraph.Inlines.Add(new Run(" "));
-                    }
-                        break;
-                }
-                if (match.Groups["isturbo"].Value.Equals("1"))
-                {
-                    paragraph.Inlines.Add(Globals.FromResource("Images.Turbo.png"));
-                    paragraph.Inlines.Add(new Run(" "));
-                }
-                if (match.Groups["issub"].Value.Equals("1"))
-                {
-                    paragraph.Inlines.Add(Globals.FromResource("Images.Subscriber.png"));
-                    paragraph.Inlines.Add(new Run(" "));
-                }
-                paragraph.Inlines.Add(
-                    new Run((match.Groups["name"].Success
-                        ? match.Groups["name"].Value
-                        : match.Groups["secondname"].Value)
-                        .Replace(@"\s", " "))
-                    {
-                        Foreground = Globals.RgbToBrush(match.Groups["color"].Value),
-                        FontWeight = FontWeights.Bold
-                    });
-
-                paragraph.Inlines.Add(new Run(": "));
-
-                var emotes = match.Groups["emote"].Value;
-                var list = new List<Emote>();
-                if (emotes != "")
-                {
-                    string[] emoteList;
-                    if (!emotes.Contains("/"))
-                    {
-                        emoteList = new[]
-                        {
-                            emotes
-                        };
-                    }
-                    else
-                    {
-                        emoteList = emotes.Split('/');
-                    }
-                    foreach (var rawEmote in emoteList)
-                    {
-                        var emoteParts = rawEmote.Split(':');
-                        var emoteIndexString = emoteParts[1];
-                        string[] emoteIndexes;
-                        if (!emoteIndexString.Contains(","))
-                        {
-                            emoteIndexes = new[]
+                        case "mod":
                             {
-                                emoteIndexString
+                                paragraph.Inlines.Add(Globals.FromResource("Images.Moderator.png"));
+                                paragraph.Inlines.Add(new Run(" "));
+                            }
+                            break;
+                        case "admin":
+                            {
+                                paragraph.Inlines.Add(Globals.FromResource("Images.Admin.png"));
+                                paragraph.Inlines.Add(new Run(" "));
+                            }
+                            break;
+                        case "global_mod":
+                            {
+                                paragraph.Inlines.Add(Globals.FromResource("Images.GlobalModerator.png"));
+                                paragraph.Inlines.Add(new Run(" "));
+                            }
+                            break;
+                        case "staff":
+                            {
+                                paragraph.Inlines.Add(Globals.FromResource("Images.Staff.png"));
+                                paragraph.Inlines.Add(new Run(" "));
+                            }
+                            break;
+                    }
+
+                    if (match.Groups["isturbo"].Value.Equals("1"))
+                    {
+                        paragraph.Inlines.Add(Globals.FromResource("Images.Turbo.png"));
+                        paragraph.Inlines.Add(new Run(" "));
+                    }
+                    if (match.Groups["issub"].Value.Equals("1"))
+                    {
+                        paragraph.Inlines.Add(Globals.FromResource("Images.Subscriber.png"));
+                        paragraph.Inlines.Add(new Run(" "));
+                    }
+
+                    paragraph.Inlines.Add(new Run((
+                        match.Groups["name"].Success // If getting the first name is a success (the field isn't empty)
+                            ? match.Groups["name"].Value // Use the first name
+                            : match.Groups["secondname"].Value) // Else use the 'fallback' name
+                                .Replace(@"\s", " ")) // Replace \s (space) with a space (only used for usernames)
+                        {
+                            Foreground = Globals.RgbToBrush(match.Groups["color"].Value), // Remember to use the color of their name
+                            FontWeight = FontWeights.Bold
+                        });
+
+                    paragraph.Inlines.Add(new Run(": "));
+
+                    var emotes = match.Groups["emote"].Value;
+                    var list = new List<Emote>();
+                    if (emotes != "")
+                    {
+                        string[] emoteList;
+                        if (!emotes.Contains("/"))
+                        {
+                            emoteList = new[]
+                            {
+                                emotes
                             };
                         }
                         else
                         {
-                            emoteIndexes = emoteIndexString.Split(',');
+                            emoteList = emotes.Split('/');
                         }
-                        foreach (var index in emoteIndexes)
+                        foreach (var rawEmote in emoteList)
                         {
-                            var indexSplit = index.Split('-');
-                            var emote = new Emote
+                            var emoteParts = rawEmote.Split(':');
+                            var emoteIndexString = emoteParts[1];
+                            string[] emoteIndexes;
+                            if (!emoteIndexString.Contains(","))
                             {
-                                EmoteName = emoteParts[0],
-                                Indexes = new List<int>()
-                            };
-                            for (var i = int.Parse(indexSplit[0]); i <= int.Parse(indexSplit[1]); ++i)
-                            {
-                                emote.Indexes.Add(i);
+                                emoteIndexes = new[]
+                                {
+                                    emoteIndexString
+                                };
                             }
-                            list.Add(emote);
+                            else
+                            {
+                                emoteIndexes = emoteIndexString.Split(',');
+                            }
+                            foreach (var index in emoteIndexes)
+                            {
+                                var indexSplit = index.Split('-');
+                                var emote = new Emote
+                                {
+                                    EmoteName = emoteParts[0],
+                                    Indexes = new List<int>()
+                                };
+                                for (var i = int.Parse(indexSplit[0]); i <= int.Parse(indexSplit[1]); ++i)
+                                {
+                                    emote.Indexes.Add(i);
+                                }
+                                list.Add(emote);
+                            }
                         }
                     }
-                }
-                var message = match.Groups["message"].Value;
-                var finalMessage = "";
-                for (int i = 0; i < message.Length; ++i)
-                {
-                    if (!list.Exists(s => s.Indexes.Contains(i)))
+                    var message = match.Groups["message"].Value;
+                    var finalMessage = "";
+                    for (int i = 0; i < message.Length; ++i)
                     {
-                        finalMessage += message[i].ToString();
+                        if (!list.Exists(s => s.Indexes.Contains(i)))
+                        {
+                            finalMessage += message[i].ToString();
+                        }
+                        else if (list.Exists(s => s.Indexes[0] == i))
+                        {
+
+                            paragraph.Inlines.Add(new Run(finalMessage));
+                            finalMessage = "";
+                            var image =
+                                Globals.ImageFromUrl(
+                                    $"https://static-cdn.jtvnw.net/emoticons/v1/{ list.First(s => s.Indexes[0] == i).EmoteName}/1.0");
+                            paragraph.Inlines.Add(image);
+                        }
                     }
-                    else if (list.Exists(s => s.Indexes[0] == i))
-                    {
 
-                        paragraph.Inlines.Add(new Run(finalMessage));
-                        finalMessage = "";
-                        var image =
-                            Globals.ImageFromUrl(
-                                $"https://static-cdn.jtvnw.net/emoticons/v1/{ list.First(s => s.Indexes[0] == i).EmoteName}/1.0");
-                        paragraph.Inlines.Add(image);
-                    }
-                }
+                    paragraph.Inlines.Add(new Run(finalMessage));
 
-                paragraph.Inlines.Add(new Run(finalMessage));
-
-                //MatchCollection matches = Globals.UrlRegex.Matches(new TextRange(paragraph.ContentStart, paragraph.ContentEnd).Text);
-
-                //foreach (Match urlMatch in matches)
-                //{
-                //    Globals.LogTextBoxQueue.Enqueue(new Paragraph(new Run(urlMatch.Value)));
-                //    TextPointer begin = paragraph.ContentStart.GetPositionAtOffset(urlMatch.Index);
-                //    TextPointer end = begin?.GetPositionAtOffset(urlMatch.Length);
-                //    if (begin != null && end != null)
-                //    {
-                //        var hyperlink = new Hyperlink(begin, end);
-                //        hyperlink.Click += delegate {
-                //            Process.Start(urlMatch.Value);
-                //        };
-                //    }
-                //}
-
-                Globals.ChatTextBoxQueue.Enqueue(paragraph);
-            });
-        }
-
-        private static Run UrlRun(string text)
-        {
-            Run run = new Run(text);
-
-            MatchCollection matches = Globals.UrlRegex.Matches(run.Text);
-
-            foreach (Match urlMatch in matches)
-            {
-                Globals.LogTextBoxQueue.Enqueue(new Paragraph(new Run(urlMatch.Value)));
-                TextPointer begin = run.ContentStart.GetPositionAtOffset(urlMatch.Index);
-                TextPointer end = begin?.GetPositionAtOffset(urlMatch.Length);
-                if (begin != null && end != null)
-                {
-                    var hyperlink = new Hyperlink(begin, end);
-                }
+                    Globals.ChatTextBoxQueue.Enqueue(paragraph);
+                });
             }
-            return run;
         }
 
         private struct Emote

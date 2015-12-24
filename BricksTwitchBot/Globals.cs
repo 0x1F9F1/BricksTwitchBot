@@ -104,6 +104,13 @@ namespace BricksTwitchBot
         public static void SaveConfig()
         {
             OptionsConfig.SaveToFile("TwitchBot.ini");
+
+            Log("Saved Config");
+        }
+
+        public static void Log(object obj)
+        {
+            LogWriter?.WriteLine("{0:t} | {1}", DateTime.Now, obj);
         }
     }
 }

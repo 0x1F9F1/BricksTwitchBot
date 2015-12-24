@@ -24,6 +24,12 @@ namespace BricksTwitchBot
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             Globals.Running = true;
+
+            Globals.LogWriter = File.AppendText("Logging.txt");
+            Globals.LogWriter.AutoFlush = true;
+
+            Globals.Log("Started Bot");
+
             if (!File.Exists("TwitchBot.Ini"))
             {
                 using (var manifestResourceStream =
@@ -34,16 +40,16 @@ namespace BricksTwitchBot
                         manifestResourceStream?.CopyTo(fileStream);
                     }
                 }
+                Globals.Log("Created new TwitchBot.ini settings file");
             }
 
             Globals.OptionsConfig = Configuration.LoadFromFile("TwitchBot.ini");
+            Globals.Log("Successfully loaded settings file");
+            
             Globals.WindowDispatcher = Dispatcher;
             Globals.ChatStatusBox = ChatStatusBox;
 
             Globals.FontFamily = new FontFamily("Helvetica Neue");
-
-            Globals.LogWriter = File.AppendText("Logging.txt");
-            Globals.LogWriter.AutoFlush = true;
 
             UsernameInputBox.Text = Globals.OptionsConfig["Options"]["Username"].StringValue;
             OauthInputBox.Password = Globals.OptionsConfig["Options"]["Oauth"].StringValue;
@@ -61,15 +67,20 @@ namespace BricksTwitchBot
                 IsBackground = true
             }.Start();
 
+            Globals.Log("Started textbox updater threads");
+
             if (AutoConnectCheckBox.IsChecked ?? false)
             {
                 Connect();
+                Globals.Log("Auto Connecting");
             }
         }
 
         private void StartListenerClient()
         {
             Globals.ListenIrc = new IrcClient(null, null, Globals.OptionsConfig["Options"]["ChannelToJoin"].StringValue);
+
+            Globals.Log("Connected to IRC (Listener)");
 
             while (Globals.ListenIrc?.Connected ?? false)
             {
@@ -93,12 +104,14 @@ namespace BricksTwitchBot
                Globals.OptionsConfig["Options"]["Oauth"].StringValue,
                Globals.OptionsConfig["Options"]["ChannelToJoin"].StringValue);
 
+            Globals.Log("Connected to IRC (Chat)");
+
             while (Globals.ChatIrc?.Connected ?? false)
             {
                 var data = Globals.ChatIrc.ReadData();
                 if (data == null)
                 {
-                    Thread.Sleep(250);
+                    Thread.Sleep(100);
                 }
             }
 
@@ -130,6 +143,7 @@ namespace BricksTwitchBot
                 if (Globals.LogTextBoxQueue.TryDequeue(out paragraph))
                 {
                     AddToTextBox(LogTextBox, paragraph, true);
+                    Globals.Log(new TextRange(paragraph.ContentStart, paragraph.ContentEnd).Text);
                     Thread.Sleep(10);
                 }
                 else
@@ -153,8 +167,6 @@ namespace BricksTwitchBot
 
                 var textRange = new TextRange(paragraph.ContentStart, paragraph.ContentEnd);
                 textRange.ApplyPropertyValue(Inline.BaselineAlignmentProperty, BaselineAlignment.Center);
-
-                Globals.LogWriter.WriteLine($"{ textbox.Name } | {textRange.Text}");
 
                 textbox.Dispatcher.Invoke(delegate
                 {
@@ -236,6 +248,7 @@ namespace BricksTwitchBot
             {
                 IsBackground = true
             }.Start();
+
             if (!AnonymousCheckBox.IsChecked ?? false)
             {
                 new Thread(StartChatClient)
@@ -249,6 +262,8 @@ namespace BricksTwitchBot
         {
             Globals.ChatIrc?.Disconnect();
             Globals.ListenIrc?.Disconnect();
+
+            Globals.Log("Disconnected from IRC Connections");
         }
 
         private void UsernameInputBox_LostFocus(object sender, RoutedEventArgs e)
