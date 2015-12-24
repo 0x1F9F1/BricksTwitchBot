@@ -11,35 +11,34 @@ namespace BricksTwitchBot.Irc
         {
             Globals.OnUi(delegate
             {
-                var list = new List<Emote>();
                 var match = Globals.MessageMatch.Match(data);
                 var paragraph = new Paragraph();
                 switch (match.Groups["usertype"].Value)
                 {
                     case "mod":
                     {
-                        var image = Globals.FromResource("BricksTwitchBot.Images.Moderator.png");
+                        var image = Globals.FromResource("Images.Moderator.png");
                         paragraph.Inlines.Add(image);
                         paragraph.Inlines.Add(new Run(" "));
                     }
                         break;
                     case "admin":
                     {
-                        var image = Globals.FromResource("BricksTwitchBot.Images.Admin.png");
+                        var image = Globals.FromResource("Images.Admin.png");
                         paragraph.Inlines.Add(image);
                         paragraph.Inlines.Add(new Run(" "));
                     }
                         break;
                     case "global_mod":
                     {
-                        var image = Globals.FromResource("BricksTwitchBot.Images.GlobalModerator.png");
+                        var image = Globals.FromResource("Images.GlobalModerator.png");
                         paragraph.Inlines.Add(image);
                         paragraph.Inlines.Add(new Run(" "));
                     }
                         break;
                     case "staff":
                     {
-                        var image = Globals.FromResource("BricksTwitchBot.Images.Staff.png");
+                        var image = Globals.FromResource("Images.Staff.png");
                         paragraph.Inlines.Add(image);
                         paragraph.Inlines.Add(new Run(" "));
                     }
@@ -47,12 +46,12 @@ namespace BricksTwitchBot.Irc
                 }
                 if (match.Groups["isturbo"].Value.Equals("1"))
                 {
-                    paragraph.Inlines.Add(Globals.FromResource("BricksTwitchBot.Images.Turbo.png"));
+                    paragraph.Inlines.Add(Globals.FromResource("Images.Turbo.png"));
                     paragraph.Inlines.Add(new Run(" "));
                 }
                 if (match.Groups["issub"].Value.Equals("1"))
                 {
-                    paragraph.Inlines.Add(Globals.FromResource("BricksTwitchBot.Images.Subscriber.png"));
+                    paragraph.Inlines.Add(Globals.FromResource("Images.Subscriber.png"));
                     paragraph.Inlines.Add(new Run(" "));
                 }
                 paragraph.Inlines.Add(
@@ -68,6 +67,7 @@ namespace BricksTwitchBot.Irc
                 paragraph.Inlines.Add(new Run(": "));
 
                 var emotes = match.Groups["emote"].Value;
+                var list = new List<Emote>();
                 if (emotes != "")
                 {
                     string[] emoteList;
@@ -101,14 +101,12 @@ namespace BricksTwitchBot.Irc
                         foreach (var index in emoteIndexes)
                         {
                             var indexSplit = index.Split('-');
-                            var emoteStart = int.Parse(indexSplit[0]);
-                            var emoteEnd = int.Parse(indexSplit[1]) + 1;
                             var emote = new Emote
                             {
                                 EmoteName = emoteParts[0],
                                 Indexes = new List<int>()
                             };
-                            for (var i = emoteStart; i < emoteEnd; ++i)
+                            for (var i = int.Parse(indexSplit[0]); i <= int.Parse(indexSplit[1]); ++i)
                             {
                                 emote.Indexes.Add(i);
                             }
@@ -118,7 +116,7 @@ namespace BricksTwitchBot.Irc
                 }
                 var message = match.Groups["message"].Value;
                 var finalMessage = "";
-                for (var i = 0; i < message.Length; i++)
+                for (int i = 0; i < message.Length; ++i)
                 {
                     if (!list.Exists(s => s.Indexes.Contains(i)))
                     {
@@ -129,12 +127,14 @@ namespace BricksTwitchBot.Irc
                         paragraph.Inlines.Add(finalMessage);
                         finalMessage = "";
                         var image =
-                            Globals.EmoteFromUrl(
-                                $"https://static-cdn.jtvnw.net/emoticons/v1/{list.First(s => s.Indexes[0] == i).EmoteName}/1.0");
+                            Globals.ImageFromUrl(
+                                $"https://static-cdn.jtvnw.net/emoticons/v1/{ list.First(s => s.Indexes[0] == i).EmoteName}/1.0");
                         paragraph.Inlines.Add(image);
                     }
                 }
+
                 paragraph.Inlines.Add(finalMessage);
+
                 Globals.ChatTextBoxQueue.Enqueue(paragraph);
             });
         }

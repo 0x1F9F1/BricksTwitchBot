@@ -32,20 +32,24 @@ namespace BricksTwitchBot
         public static readonly Regex RoomStateMatch =       new Regex(@"@(?:broadcaster-lang=(?<lang>[^;]*);?)?(?:r9k=(?<isr9k>[01]);?)?(?:slow=(?<isSlow>\d+);?)?(?:subs-only=(?<isSub>[01]);?)? :tmi\.twitch\.tv ROOMSTATE #\S+$", RegexOptions.Compiled);
         public static readonly Regex NoticeMatch =          new Regex(@"@msg-id=(?<msgid>\S+) :tmi\.twitch\.tv NOTICE #\S+ :(?<message>.+)", RegexOptions.Compiled);
 
+        public static readonly Regex UrlRegex = new Regex(@"#\b(([\w-]+://?|www[.])[^\s()<>]+(?:\([\w\d]+\)|([^[:punct:]\s]|/)))#iS", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        public static readonly Regex EmailRegex = new Regex(@"([a-zA-Z_0-9.-]+\@[a-zA-Z_0-9.-]+\.\w+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
         public static ConcurrentQueue<Paragraph> ChatTextBoxQueue = new ConcurrentQueue<Paragraph>();
         public static ConcurrentQueue<Paragraph> LogTextBoxQueue =  new ConcurrentQueue<Paragraph>();
 
         public static Dispatcher WindowDispatcher;
-        public static IrcClient IrcClient;
+        public static IrcClient ChatIrc;
+        public static IrcClient ListenIrc;
         public static Configuration OptionsConfig;
         public static Inline[] MessageStart;
         public static Label ChatStatusBox;
         public static bool Running;
 
-        public static FontFamily fontFamily;
+        public static FontFamily FontFamily;
         public static StreamWriter LogWriter;
 
-        public static Image EmoteFromUrl(string url)
+        public static Image ImageFromUrl(string url)
         {
             var bitmapImage = new BitmapImage(new Uri(url));
             var image = new Image
@@ -60,24 +64,6 @@ namespace BricksTwitchBot
         public static void OnUi(Action action)
         {
             WindowDispatcher.BeginInvoke(action);
-        }
-
-        public static void AlignText(RichTextBox textBox)
-        {
-            if (textBox.Dispatcher.CheckAccess())
-            {
-                new TextRange(textBox.Document.ContentStart, textBox.Document.ContentEnd).ApplyPropertyValue(
-                    Inline.BaselineAlignmentProperty, BaselineAlignment.Center);
-            }
-            else
-            {
-                OnUi(
-                    delegate
-                    {
-                        new TextRange(textBox.Document.ContentStart, textBox.Document.ContentEnd).ApplyPropertyValue(
-                            Inline.BaselineAlignmentProperty, BaselineAlignment.Center);
-                    });
-            }
         }
 
         public static Brush RgbToBrush(string rgb)
@@ -95,9 +81,10 @@ namespace BricksTwitchBot
 
         public static Image FromResource(string path)
         {
+            Assembly assembly = Assembly.GetExecutingAssembly();
             var bitmapImage = new BitmapImage();
             bitmapImage.BeginInit();
-            bitmapImage.StreamSource = Assembly.GetEntryAssembly().GetManifestResourceStream(path);
+            bitmapImage.StreamSource = assembly.GetManifestResourceStream($"{assembly.GetName().Name}.{path}");
             bitmapImage.EndInit();
             return new Image
             {

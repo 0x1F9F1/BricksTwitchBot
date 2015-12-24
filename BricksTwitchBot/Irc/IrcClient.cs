@@ -1,12 +1,13 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Net.Sockets;
+using System.Text.RegularExpressions;
 
 namespace BricksTwitchBot.Irc
 {
     public class IrcClient
     {
         private readonly string _channel;
-        private readonly string _username;
 
         public StreamReader StreamReader;
         public StreamWriter StreamWriter;
@@ -22,13 +23,23 @@ namespace BricksTwitchBot.Irc
             {
                 AutoFlush = true
             };
+
             _channel = channel.ToLower();
-            _username = username.ToLower();
+
             WriteOther("CAP REQ :twitch.tv/membership");
             WriteOther("CAP REQ :twitch.tv/commands");
             WriteOther("CAP REQ :twitch.tv/tags");
-            WriteOther($"PASS {oauth}");
-            WriteOther($"NICK {_username}");
+
+            if (string.IsNullOrWhiteSpace(oauth))
+            {
+                WriteOther($"NICK justinfan{ new Random().Next(0, int.MaxValue) }");
+            }
+            else
+            {
+                WriteOther($"PASS {oauth}");
+                WriteOther($"NICK {username.ToLower()}");
+            }
+
             WriteOther($"JOIN #{_channel}");
         }
 
@@ -36,7 +47,17 @@ namespace BricksTwitchBot.Irc
         {
             try
             {
-                return StreamReader.ReadLine();
+                string data = StreamReader.ReadLine();
+                Match match;
+
+                if (data != null && (match = Globals.PingMatch.Match(data)).Success)
+                {
+                    WriteOther($"PONG {match.Groups["ip"].Value}");
+                    return null;
+                }
+
+                return data;
+
             }
             catch (IOException)
             {

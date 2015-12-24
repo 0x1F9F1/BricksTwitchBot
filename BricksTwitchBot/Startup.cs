@@ -10,7 +10,7 @@ namespace BricksTwitchBot
         private static void Main()
         {
             AppDomain.CurrentDomain.AssemblyResolve += OnResolveAssembly;
-            App.Main();
+            App.Main(); 
         }
 
         private static Assembly OnResolveAssembly(object sender, ResolveEventArgs args)

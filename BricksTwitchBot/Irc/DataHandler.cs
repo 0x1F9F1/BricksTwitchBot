@@ -9,7 +9,7 @@ namespace BricksTwitchBot.Irc
 {
     public static class DataHandler
     {
-        static List<string> roomStateList = new List<string>();
+        static readonly List<string> RoomStateList = new List<string>();
         public static void HandleData(string data)
         {
             Match match;
@@ -22,23 +22,21 @@ namespace BricksTwitchBot.Irc
                 Globals.OnUi(delegate
                 {
                     var paragraph = new Paragraph();
-                    var inlines = paragraph.Inlines;
-                    var run = new Run("[Modded]")
+                    paragraph.Inlines.Add(new Run("[Modded]")
                     {
                         Foreground = new SolidColorBrush(Colors.Red),
                         FontWeight = FontWeights.Bold
-                    };
-                    inlines.Add(run);
+                    });
                     paragraph.Inlines.Add(
                         new Run(
                             $": {match.Groups["user"].Value} was {(match.Groups["change"].Value == "+" ? "modded" : "unmodded")}"));
                     Globals.ChatTextBoxQueue.Enqueue(paragraph);
                 });
             }
-            else if ((match = Globals.PingMatch.Match(data)).Success)
-            {
-                Globals.IrcClient.WriteOther($"PONG {match.Groups["ip"].Value}");
-            }
+            //else if ((match = Globals.PingMatch.Match(data)).Success)
+            //{
+            //    Globals.ListenIrc.WriteOther($"PONG {match.Groups["ip"].Value}");
+            //}
             else if ((match = Globals.TimeoutMatch.Match(data)).Success)
             {
                 Globals.OnUi(delegate
@@ -201,31 +199,31 @@ namespace BricksTwitchBot.Irc
                 //    var str = match.Groups["usertype"].Value;
                 //    if (str == "mod")
                 //    {
-                //        var image = Globals.FromResource("BricksTwitchBot.Images.Moderator.png");
+                //        var image = Globals.FromResource("Images.Moderator.png");
                 //        paragraph.Inlines.Add(image);
                 //        paragraph.Inlines.Add(new Run(" "));
                 //    }
                 //    if (str == "global_mod")
                 //    {
-                //        var image = Globals.FromResource("BricksTwitchBot.Images.GlobalModerator.png");
+                //        var image = Globals.FromResource("Images.GlobalModerator.png");
                 //        paragraph.Inlines.Add(image);
                 //        paragraph.Inlines.Add(new Run(" "));
                 //    }
                 //    if (str == "admin")
                 //    {
-                //        var image = Globals.FromResource("BricksTwitchBot.Images.Admin.png");
+                //        var image = Globals.FromResource("Images.Admin.png");
                 //        paragraph.Inlines.Add(image);
                 //        paragraph.Inlines.Add(new Run(" "));
                 //    }
                 //    if (str == "staff")
                 //    {
-                //        var image = Globals.FromResource("BricksTwitchBot.Images.Staff.png");
+                //        var image = Globals.FromResource("Images.Staff.png");
                 //        paragraph.Inlines.Add(image);
                 //        paragraph.Inlines.Add(new Run(" "));
                 //    }
                 //    if (match.Groups["isturbo"].Value == "1")
                 //    {
-                //        var image = Globals.FromResource("BricksTwitchBot.Images.Turbo.png");
+                //        var image = Globals.FromResource("Images.Turbo.png");
                 //        paragraph.Inlines.Add(image);
                 //        paragraph.Inlines.Add(new Run(" "));
                 //    }
@@ -250,37 +248,37 @@ namespace BricksTwitchBot.Irc
                     var str = match.Groups["usertype"].Value;
                     if (str == "mod")
                     {
-                        var image = Globals.FromResource("BricksTwitchBot.Images.Moderator.png");
+                        var image = Globals.FromResource("Images.Moderator.png");
                         paragraph.Inlines.Add(image);
                         paragraph.Inlines.Add(new Run(" "));
                     }
                     if (str == "global_mod")
                     {
-                        var image = Globals.FromResource("BricksTwitchBot.Images.GlobalModerator.png");
+                        var image = Globals.FromResource("Images.GlobalModerator.png");
                         paragraph.Inlines.Add(image);
                         paragraph.Inlines.Add(new Run(" "));
                     }
                     if (str == "admin")
                     {
-                        var image = Globals.FromResource("BricksTwitchBot.Images.Admin.png");
+                        var image = Globals.FromResource("Images.Admin.png");
                         paragraph.Inlines.Add(image);
                         paragraph.Inlines.Add(new Run(" "));
                     }
                     if (str == "staff")
                     {
-                        var image = Globals.FromResource("BricksTwitchBot.Images.Staff.png");
+                        var image = Globals.FromResource("Images.Staff.png");
                         paragraph.Inlines.Add(image);
                         paragraph.Inlines.Add(new Run(" "));
                     }
                     if (match.Groups["isturbo"].Value == "1")
                     {
-                        var image = Globals.FromResource("BricksTwitchBot.Images.Turbo.png");
+                        var image = Globals.FromResource("Images.Turbo.png");
                         paragraph.Inlines.Add(image);
                         paragraph.Inlines.Add(new Run(" "));
                     }
                     if (match.Groups["issub"].Value == "1")
                     {
-                        var image = Globals.FromResource("BricksTwitchBot.Images.Subscriber.png");
+                        var image = Globals.FromResource("Images.Subscriber.png");
                         paragraph.Inlines.Add(image);
                         paragraph.Inlines.Add(new Run(" "));
                     }
@@ -302,22 +300,22 @@ namespace BricksTwitchBot.Irc
                     {
                         if (group.Value == "1")
                         {
-                            roomStateList.Add("Sub-Only");
+                            RoomStateList.Add("Sub-Only");
                         }
                         else
                         {
-                            roomStateList.Remove("Sub-Only");
+                            RoomStateList.Remove("Sub-Only");
                         }
                     }
                     if ((group = match.Groups["isr9k"]).Success)
                     {
                         if (group.Value == "1")
                         {
-                            roomStateList.Add("R9K");
+                            RoomStateList.Add("R9K");
                         }
                         else
                         {
-                            roomStateList.Remove("R9K");
+                            RoomStateList.Remove("R9K");
                         }
                     }
                     if ((group = match.Groups["isSlow"]).Success)
@@ -325,15 +323,15 @@ namespace BricksTwitchBot.Irc
                         int parsed = int.Parse(group.Value);
                         if (parsed > 0)
                         {
-                            roomStateList.RemoveAll(s => s.StartsWith("Slow"));
-                            roomStateList.Add($"Slow ({parsed})");
+                            RoomStateList.RemoveAll(s => s.StartsWith("Slow"));
+                            RoomStateList.Add($"Slow ({parsed})");
                         }
                         else
                         {
-                            roomStateList.RemoveAll(s => s.StartsWith("Slow"));
+                            RoomStateList.RemoveAll(s => s.StartsWith("Slow"));
                         }
                     }
-                    Globals.ChatStatusBox.Content = string.Join(" | ", roomStateList);
+                    Globals.ChatStatusBox.Content = string.Join(" | ", RoomStateList);
                 });
             }
             else if ((match = Globals.NoticeMatch.Match(data)).Success)
