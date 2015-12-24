@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
 
@@ -70,75 +71,47 @@ namespace BricksTwitchBot.Irc
 
                     paragraph.Inlines.Add(new Run(": "));
 
-                    var emotes = match.Groups["emote"].Value;
-                    var list = new List<Emote>();
-                    if (emotes != "")
-                    {
-                        string[] emoteList;
-                        if (!emotes.Contains("/"))
-                        {
-                            emoteList = new[]
-                            {
-                                emotes
-                            };
-                        }
-                        else
-                        {
-                            emoteList = emotes.Split('/');
-                        }
-                        foreach (var rawEmote in emoteList)
-                        {
-                            var emoteParts = rawEmote.Split(':');
-                            var emoteIndexString = emoteParts[1];
-                            string[] emoteIndexes;
-                            if (!emoteIndexString.Contains(","))
-                            {
-                                emoteIndexes = new[]
-                                {
-                                    emoteIndexString
-                                };
-                            }
-                            else
-                            {
-                                emoteIndexes = emoteIndexString.Split(',');
-                            }
-                            foreach (var index in emoteIndexes)
-                            {
-                                var indexSplit = index.Split('-');
-                                var emote = new Emote
-                                {
-                                    EmoteName = emoteParts[0],
-                                    Indexes = new List<int>()
-                                };
-                                for (var i = int.Parse(indexSplit[0]); i <= int.Parse(indexSplit[1]); ++i)
-                                {
-                                    emote.Indexes.Add(i);
-                                }
-                                list.Add(emote);
-                            }
-                        }
-                    }
-                    var message = match.Groups["message"].Value;
-                    var finalMessage = "";
-                    for (int i = 0; i < message.Length; ++i)
-                    {
-                        if (!list.Exists(s => s.Indexes.Contains(i)))
-                        {
-                            finalMessage += message[i].ToString();
-                        }
-                        else if (list.Exists(s => s.Indexes[0] == i))
-                        {
+                    var message = new Paragraph(new Run(match.Groups["message"].Value));
+                    //var message = new Run(match.Groups["message"].Value);
+                    var emoteString = match.Groups["emote"].Value;
 
-                            paragraph.Inlines.Add(new Run(finalMessage));
-                            finalMessage = "";
-                            var image =
-                                Globals.ImageFromUrl(
-                                    $"https://static-cdn.jtvnw.net/emoticons/v1/{ list.First(s => s.Indexes[0] == i).EmoteName}/1.0");
-                            paragraph.Inlines.Add(image);
+                    var emoteList = new List<Emote>();
+
+                    if (!string.IsNullOrWhiteSpace(emoteString))
+                    {
+                        var emoteStrings = emoteString.Split('/');
+                        foreach (var splitEmoteString in emoteStrings)
+                        {
+                            var emoteSplitIdAndIndexs = splitEmoteString.Split(':');
+
+                            foreach (var emoteIndexBeginAndEnd in emoteSplitIdAndIndexs[1].Split(','))
+                            {
+                                var emoteIndexBeginAndEndSplit = emoteIndexBeginAndEnd.Split('-');
+
+                                emoteList.Add(new Emote
+                                {
+                                    ID = emoteSplitIdAndIndexs[0],
+                                    Start = int.Parse(emoteIndexBeginAndEndSplit[0]),
+                                    End = int.Parse(emoteIndexBeginAndEndSplit[1]) + 1
+                                });
+                            }
+                        }
+
+                        var range = new TextRange(message.ContentStart, message.ContentEnd);
+
+                        foreach (Emote emote in emoteList.OrderBy(s => s.Start).Reverse())
+                        {
+                            var image = Globals.ImageFromUrl($"https://static-cdn.jtvnw.net/emoticons/v1/{emote.ID}/1.0");
+
+                            var imageStart = range.Start.GetPositionAtOffset(emote.Start);
+                            var imageEnd = range.Start.GetPositionAtOffset(emote.End);
+                            var imageRange = new TextRange(imageStart, imageEnd);
+                            imageRange.Text = "";
+                            InlineUIContainer imageContainer = new InlineUIContainer(image, imageStart);
                         }
                     }
 
-                    paragraph.Inlines.Add(new Run(finalMessage));
+                    paragraph.Inlines.AddRange(message.Inlines.ToArray());
 
                     Globals.ChatTextBoxQueue.Enqueue(paragraph);
                 });
@@ -147,8 +120,10 @@ namespace BricksTwitchBot.Irc
 
         private struct Emote
         {
-            public string EmoteName;
-            public List<int> Indexes;
+            public string ID;
+            public int Start;
+            public int End;
+
         }
     }
 }
