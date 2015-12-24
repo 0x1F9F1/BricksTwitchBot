@@ -1,7 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Documents;
+using System.Windows.Input;
 
 namespace BricksTwitchBot.Irc
 {
@@ -124,7 +128,8 @@ namespace BricksTwitchBot.Irc
                     }
                     else if (list.Exists(s => s.Indexes[0] == i))
                     {
-                        paragraph.Inlines.Add(finalMessage);
+
+                        paragraph.Inlines.Add(new Run(finalMessage));
                         finalMessage = "";
                         var image =
                             Globals.ImageFromUrl(
@@ -133,10 +138,45 @@ namespace BricksTwitchBot.Irc
                     }
                 }
 
-                paragraph.Inlines.Add(finalMessage);
+                paragraph.Inlines.Add(new Run(finalMessage));
+
+                //MatchCollection matches = Globals.UrlRegex.Matches(new TextRange(paragraph.ContentStart, paragraph.ContentEnd).Text);
+
+                //foreach (Match urlMatch in matches)
+                //{
+                //    Globals.LogTextBoxQueue.Enqueue(new Paragraph(new Run(urlMatch.Value)));
+                //    TextPointer begin = paragraph.ContentStart.GetPositionAtOffset(urlMatch.Index);
+                //    TextPointer end = begin?.GetPositionAtOffset(urlMatch.Length);
+                //    if (begin != null && end != null)
+                //    {
+                //        var hyperlink = new Hyperlink(begin, end);
+                //        hyperlink.Click += delegate {
+                //            Process.Start(urlMatch.Value);
+                //        };
+                //    }
+                //}
 
                 Globals.ChatTextBoxQueue.Enqueue(paragraph);
             });
+        }
+
+        private static Run UrlRun(string text)
+        {
+            Run run = new Run(text);
+
+            MatchCollection matches = Globals.UrlRegex.Matches(run.Text);
+
+            foreach (Match urlMatch in matches)
+            {
+                Globals.LogTextBoxQueue.Enqueue(new Paragraph(new Run(urlMatch.Value)));
+                TextPointer begin = run.ContentStart.GetPositionAtOffset(urlMatch.Index);
+                TextPointer end = begin?.GetPositionAtOffset(urlMatch.Length);
+                if (begin != null && end != null)
+                {
+                    var hyperlink = new Hyperlink(begin, end);
+                }
+            }
+            return run;
         }
 
         private struct Emote

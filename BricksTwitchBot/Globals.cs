@@ -32,7 +32,7 @@ namespace BricksTwitchBot
         public static readonly Regex RoomStateMatch =       new Regex(@"@(?:broadcaster-lang=(?<lang>[^;]*);?)?(?:r9k=(?<isr9k>[01]);?)?(?:slow=(?<isSlow>\d+);?)?(?:subs-only=(?<isSub>[01]);?)? :tmi\.twitch\.tv ROOMSTATE #\S+$", RegexOptions.Compiled);
         public static readonly Regex NoticeMatch =          new Regex(@"@msg-id=(?<msgid>\S+) :tmi\.twitch\.tv NOTICE #\S+ :(?<message>.+)", RegexOptions.Compiled);
 
-        public static readonly Regex UrlRegex = new Regex(@"#\b(([\w-]+://?|www[.])[^\s()<>]+(?:\([\w\d]+\)|([^[:punct:]\s]|/)))#iS", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        public static readonly Regex UrlRegex = new Regex(@"\S+[.]\S+", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         public static readonly Regex EmailRegex = new Regex(@"([a-zA-Z_0-9.-]+\@[a-zA-Z_0-9.-]+\.\w+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         public static ConcurrentQueue<Paragraph> ChatTextBoxQueue = new ConcurrentQueue<Paragraph>();

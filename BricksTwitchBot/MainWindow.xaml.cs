@@ -60,20 +60,9 @@ namespace BricksTwitchBot
                 IsBackground = true
             }.Start();
 
-            if (Globals.OptionsConfig["Options"]["Auto-Connect"].BoolValue)
+            if (AutoConnectCheckBox.IsChecked ?? false)
             {
-                new Thread(StartListenerClient)
-                {
-                    IsBackground = true
-                }.Start();
-            }
-
-            if (Globals.OptionsConfig["Options"]["Auto-Connect"].BoolValue)
-            {
-                new Thread(StartChatClient)
-                {
-                    IsBackground = true
-                }.Start();
+                Connect();
             }
         }
 
@@ -94,8 +83,7 @@ namespace BricksTwitchBot
                 }
             }
 
-            Globals.ListenIrc?.Disconnect();
-            Globals.ChatIrc?.Disconnect();
+            Disconnect();
         }
         private void StartChatClient()
         {
@@ -107,18 +95,13 @@ namespace BricksTwitchBot
             while (Globals.ChatIrc?.Connected ?? false)
             {
                 var data = Globals.ChatIrc.ReadData();
-                if (data != null)
+                if (data == null)
                 {
-                    //DataHandler.HandleData(data);
-                }
-                else
-                {
-                    Thread.Sleep(1000);
+                    Thread.Sleep(250);
                 }
             }
 
-            Globals.ListenIrc?.Disconnect();
-            Globals.ChatIrc?.Disconnect();
+            Disconnect();
         }
 
         private void ChatBoxUpdateThread()
@@ -170,23 +153,12 @@ namespace BricksTwitchBot
                 var textRange = new TextRange(paragraph.ContentStart, paragraph.ContentEnd);
                 textRange.ApplyPropertyValue(Inline.BaselineAlignmentProperty, BaselineAlignment.Center);
 
-                //MatchCollection matches = Globals.UrlRegex.Matches(textRange.Text);
-
-                //foreach (Match match in matches)
-                //{
-                //    TextPointer begin = paragraph.ContentStart.GetPositionAtOffset(match.Index);
-                //    TextPointer end = paragraph.ContentStart.GetPositionAtOffset(match.Index + match.Length);
-                //    if (begin != null && end != null)
-                //    {
-                //        var hyperlink = new Hyperlink(begin, end) {NavigateUri = new Uri(match.Value)};
-                //    }
-                //}
-
-                Globals.LogWriter.WriteLine(textRange.Text);
+                Globals.LogWriter.WriteLine($"{ textbox.Name } | {textRange.Text}");
 
                 textbox.Dispatcher.Invoke(delegate
                 {
                     textbox.Document.Blocks.Add(paragraph);
+
                     if (scroll)
                     {
                         if ((!textbox.IsSelectionActive || ChatTextBox.Selection.Text.Length == 0) &&
@@ -238,7 +210,17 @@ namespace BricksTwitchBot
 
         private void ConnectButton_Click(object sender, RoutedEventArgs e)
         {
-            DisconnectButton_Click(sender, null);
+            Connect();
+        }
+
+        private void DisconnectButton_Click(object sender, RoutedEventArgs e)
+        {
+            Disconnect();
+        }
+
+        private void Connect()
+        {
+            Disconnect();
 
             new Thread(StartListenerClient)
             {
@@ -250,7 +232,7 @@ namespace BricksTwitchBot
             }.Start();
         }
 
-        private void DisconnectButton_Click(object sender, RoutedEventArgs e)
+        private void Disconnect()
         {
             Globals.ChatIrc?.Disconnect();
             Globals.ListenIrc?.Disconnect();
@@ -259,33 +241,42 @@ namespace BricksTwitchBot
         private void UsernameInputBox_LostFocus(object sender, RoutedEventArgs e)
         {
             Globals.OptionsConfig["Options"]["Username"].SetValue(UsernameInputBox.Text);
-            Globals.OptionsConfig.SaveToFile("TwitchBot.ini");
+            SaveConfig();
         }
 
         private void OauthInputBox_LostFocus(object sender, RoutedEventArgs e)
         {
             Globals.OptionsConfig["Options"]["Oauth"].SetValue(OauthInputBox.Password);
-            Globals.OptionsConfig.SaveToFile("TwitchBot.ini");
+            SaveConfig();
         }
 
         private void ChannelToJoinInput_LostFocus(object sender, RoutedEventArgs e)
         {
             Globals.OptionsConfig["Options"]["ChannelToJoin"].SetValue(ChannelToJoinInput.Text);
-            Globals.OptionsConfig.SaveToFile("TwitchBot.ini");
+            SaveConfig();
         }
 
         private void AutoConnectCheckBox_Click(object sender, RoutedEventArgs e)
         {
             Globals.OptionsConfig["Options"]["Auto-Connect"].SetValue(AutoConnectCheckBox.IsChecked);
-            Globals.OptionsConfig.SaveToFile("TwitchBot.ini");
+            SaveConfig();
         }
 
         private void MainForm_Closing(object sender, CancelEventArgs e)
         {
             Globals.Running = false;
-            DisconnectButton_Click(sender, null);
-            Globals.OptionsConfig.SaveToFile("TwitchBot.ini");
+            Disconnect();
+
+            SaveConfig();
+
+            Globals.LogWriter.Flush();
             Globals.LogWriter.Close();
+
+        }
+
+        private void SaveConfig()
+        {
+            Globals.OptionsConfig.SaveToFile("TwitchBot.ini");
         }
     }
 }
