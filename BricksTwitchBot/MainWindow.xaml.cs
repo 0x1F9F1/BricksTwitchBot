@@ -180,6 +180,15 @@ namespace BricksTwitchBot
             }
         }
 
+        private void LogInput_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Return)
+            {
+                LogButton_Click(sender, null);
+                e.Handled = true;
+            }
+        }
+
         private void ChatButton_Click(object sender, RoutedEventArgs e)
         {
             if ((Globals.ChatIrc?.Connected ?? false) && (Globals.ListenIrc?.Connected ?? false))
@@ -187,17 +196,6 @@ namespace BricksTwitchBot
                 var text = ChatInput.Text;
                 if (text.Length > 0)
                 {
-                    //var paragraph = new Paragraph();
-                    //if (Globals.MessageStart != null)
-                    //{
-                    //    foreach (var inline in Globals.MessageStart)
-                    //    {
-                    //        paragraph.Inlines.Add(inline);
-                    //    }
-                    //    paragraph.Inlines.Add(new Run(text));
-                    //    Globals.ChatTextBoxQueue.Enqueue(paragraph);
-                    //}
-
                     Globals.ChatIrc.WriteMessage(text);
                     ChatInput.Clear();
                 }
@@ -206,6 +204,12 @@ namespace BricksTwitchBot
 
         private void LogButton_Click(object sender, RoutedEventArgs e)
         {
+            var text = LogInput.Text;
+            if (text.Length > 0)
+            {
+                Globals.LogTextBoxQueue.Enqueue(new Paragraph(new Run(text)));
+                LogInput.Clear();
+            }
         }
 
         private void ConnectButton_Click(object sender, RoutedEventArgs e)
@@ -221,6 +225,11 @@ namespace BricksTwitchBot
         private void Connect()
         {
             Disconnect();
+
+            while ((Globals.ListenIrc?.Connected ?? false) || (Globals.ChatIrc?.Connected ?? false))
+            {
+                Thread.Sleep(10);
+            }
 
             new Thread(StartListenerClient)
             {
@@ -241,25 +250,25 @@ namespace BricksTwitchBot
         private void UsernameInputBox_LostFocus(object sender, RoutedEventArgs e)
         {
             Globals.OptionsConfig["Options"]["Username"].SetValue(UsernameInputBox.Text);
-            SaveConfig();
+            Globals.SaveConfig();
         }
 
         private void OauthInputBox_LostFocus(object sender, RoutedEventArgs e)
         {
             Globals.OptionsConfig["Options"]["Oauth"].SetValue(OauthInputBox.Password);
-            SaveConfig();
+            Globals.SaveConfig();
         }
 
         private void ChannelToJoinInput_LostFocus(object sender, RoutedEventArgs e)
         {
             Globals.OptionsConfig["Options"]["ChannelToJoin"].SetValue(ChannelToJoinInput.Text);
-            SaveConfig();
+            Globals.SaveConfig();
         }
 
         private void AutoConnectCheckBox_Click(object sender, RoutedEventArgs e)
         {
             Globals.OptionsConfig["Options"]["Auto-Connect"].SetValue(AutoConnectCheckBox.IsChecked);
-            SaveConfig();
+            Globals.SaveConfig();
         }
 
         private void MainForm_Closing(object sender, CancelEventArgs e)
@@ -267,16 +276,10 @@ namespace BricksTwitchBot
             Globals.Running = false;
             Disconnect();
 
-            SaveConfig();
+            Globals.SaveConfig();
 
             Globals.LogWriter.Flush();
             Globals.LogWriter.Close();
-
-        }
-
-        private void SaveConfig()
-        {
-            Globals.OptionsConfig.SaveToFile("TwitchBot.ini");
         }
     }
 }

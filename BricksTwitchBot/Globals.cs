@@ -39,11 +39,13 @@ namespace BricksTwitchBot
         public static ConcurrentQueue<Paragraph> LogTextBoxQueue =  new ConcurrentQueue<Paragraph>();
 
         public static Dispatcher WindowDispatcher;
+        public static Label ChatStatusBox;
+
         public static IrcClient ChatIrc;
         public static IrcClient ListenIrc;
+
         public static Configuration OptionsConfig;
-        public static Inline[] MessageStart;
-        public static Label ChatStatusBox;
+
         public static bool Running;
 
         public static FontFamily FontFamily;
@@ -63,7 +65,7 @@ namespace BricksTwitchBot
 
         public static void OnUi(Action action)
         {
-            WindowDispatcher.BeginInvoke(action);
+            WindowDispatcher.Invoke(action);
         }
 
         public static Brush RgbToBrush(string rgb)
@@ -92,6 +94,10 @@ namespace BricksTwitchBot
                 MaxHeight = bitmapImage.PixelHeight,
                 MaxWidth = bitmapImage.PixelHeight
             };
+        }
+        public static void SaveConfig()
+        {
+            OptionsConfig.SaveToFile("TwitchBot.ini");
         }
     }
 }

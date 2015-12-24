@@ -33,7 +33,7 @@
                     <RichTextBox x:Name="LogTextBox" Margin="5,5,5,36" Block.LineHeight="1" IsReadOnly="true">
                         <FlowDocument/>
                     </RichTextBox>
-                    <TextBox x:Name="LogInput" Margin="5,0,90,4" TextWrapping="Wrap" VerticalAlignment="Bottom" Height="20"/>
+                    <TextBox x:Name="LogInput" Margin="5,0,90,4" TextWrapping="Wrap" VerticalAlignment="Bottom" Height="20" KeyDown="LogInput_KeyDown"/>
                     <Button Click="LogButton_Click" x:Name="LogButton" Content="Log" VerticalAlignment="Bottom"
                   HorizontalAlignment="Right" Width="80" Margin="0,0,5,5" Height="20"/>
                 </Grid>

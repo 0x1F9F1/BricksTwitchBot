@@ -30,7 +30,7 @@ namespace BricksTwitchBot.Irc
             WriteOther("CAP REQ :twitch.tv/commands");
             WriteOther("CAP REQ :twitch.tv/tags");
 
-            if (string.IsNullOrWhiteSpace(oauth))
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(oauth))
             {
                 WriteOther($"NICK justinfan{ new Random().Next(0, int.MaxValue) }");
             }
