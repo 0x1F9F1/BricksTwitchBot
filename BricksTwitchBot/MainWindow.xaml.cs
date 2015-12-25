@@ -56,6 +56,7 @@ namespace BricksTwitchBot
             ChannelToJoinInput.Text = Globals.OptionsConfig["Options"]["ChannelToJoin"].StringValue;
             AutoConnectCheckBox.IsChecked = Globals.OptionsConfig["Options"]["Auto-Connect"].BoolValue;
             AnonymousCheckBox.IsChecked = Globals.OptionsConfig["Options"]["Anonymous"].BoolValue;
+            MaxLinesSlider.Value = Globals.OptionsConfig["Options"]["MaxLines"].DoubleValue;
 
             new Thread(ChatBoxUpdateThread)
             {
@@ -87,7 +88,12 @@ namespace BricksTwitchBot
                 var data = Globals.ListenIrc.ReadData();
                 if (data != null)
                 {
-                    DataHandler.HandleData(data);
+                    DataHandler.HandleMessage(data);
+
+                    if (!Globals.ChatIrc?.Connected ?? true) // If we are in anonymous mode, handle the other messages
+                    {
+                        DataHandler.HandleData(data);
+                    }
                 }
                 else
                 {
@@ -109,10 +115,15 @@ namespace BricksTwitchBot
             while (Globals.ChatIrc?.Connected ?? false)
             {
                 var data = Globals.ChatIrc.ReadData();
-                if (data == null)
+                if (data != null)
+                {
+                    DataHandler.HandleData(data);
+                }
+                else
                 {
                     Thread.Sleep(100);
                 }
+
             }
 
             Disconnect();
@@ -155,7 +166,7 @@ namespace BricksTwitchBot
 
         private void AddToTextBox(RichTextBox textbox, Paragraph paragraph, bool scroll)
         {
-            paragraph.Dispatcher.Invoke(delegate
+            Globals.OnUi(delegate
             {
                 paragraph.Inlines.InsertBefore(paragraph.Inlines.FirstInline,
                 new Run($"{DateTime.Now:t} ")
@@ -168,19 +179,21 @@ namespace BricksTwitchBot
                 var textRange = new TextRange(paragraph.ContentStart, paragraph.ContentEnd);
                 textRange.ApplyPropertyValue(Inline.BaselineAlignmentProperty, BaselineAlignment.Center);
 
-                textbox.Dispatcher.Invoke(delegate
-                {
-                    textbox.Document.Blocks.Add(paragraph);
+                textbox.Document.Blocks.Add(paragraph);
 
-                    if (scroll)
+                if (scroll)
+                {
+                    if ((!textbox.IsSelectionActive || ChatTextBox.Selection.Text.Length == 0) &&
+                        !(textbox.VerticalOffset + textbox.ViewportHeight < ChatTextBox.ExtentHeight - 50.0))
                     {
-                        if ((!textbox.IsSelectionActive || ChatTextBox.Selection.Text.Length == 0) &&
-                            !(textbox.VerticalOffset + textbox.ViewportHeight < ChatTextBox.ExtentHeight - 50.0))
-                        {
-                            textbox.ScrollToEnd();
-                        }
+                        textbox.ScrollToEnd();
                     }
-                });
+
+                    if (textbox.Document.Blocks.Count > MaxLinesSlider.Value)
+                    {
+                        textbox.Document.Blocks.Remove(textbox.Document.Blocks.FirstBlock);
+                    }
+                }
             });
         }
 
@@ -228,6 +241,8 @@ namespace BricksTwitchBot
         private void ConnectButton_Click(object sender, RoutedEventArgs e)
         {
             Connect();
+            Globals.ListenIrc?.JoinChannel(ChannelToJoinInput.Text);
+            Globals.ChatIrc?.JoinChannel(ChannelToJoinInput.Text);
         }
 
         private void DisconnectButton_Click(object sender, RoutedEventArgs e)
@@ -237,21 +252,24 @@ namespace BricksTwitchBot
 
         private void Connect()
         {
-            Disconnect();
-
-            while ((Globals.ListenIrc?.Connected ?? false) || (Globals.ChatIrc?.Connected ?? false))
+            if (!Globals.ChatIrc?.Connected ?? true)
             {
-                Thread.Sleep(10);
+                Globals.ChatIrc?.Disconnect();
+
+                if (!AnonymousCheckBox.IsChecked ?? false)
+                {
+                    new Thread(StartChatClient)
+                    {
+                        IsBackground = true
+                    }.Start();
+                }
             }
 
-            new Thread(StartListenerClient)
+            if (!Globals.ListenIrc?.Connected ?? true)
             {
-                IsBackground = true
-            }.Start();
+                Globals.ListenIrc?.Disconnect();
 
-            if (!AnonymousCheckBox.IsChecked ?? false)
-            {
-                new Thread(StartChatClient)
+                new Thread(StartListenerClient)
                 {
                     IsBackground = true
                 }.Start();
@@ -260,8 +278,9 @@ namespace BricksTwitchBot
 
         private void Disconnect()
         {
-            Globals.ChatIrc?.Disconnect();
             Globals.ListenIrc?.Disconnect();
+            Globals.ChatIrc?.Disconnect();
+
 
             Globals.Log("Disconnected from IRC Connections");
         }
@@ -305,6 +324,12 @@ namespace BricksTwitchBot
 
             Globals.LogWriter.Flush();
             Globals.LogWriter.Close();
+        }
+
+        private void MaxLinesSlider_LostFocus(object sender, RoutedEventArgs e)
+        {
+            Globals.OptionsConfig["Options"]["MaxLines"].DoubleValue = MaxLinesSlider.Value;
+            Globals.SaveConfig();
         }
     }
 }

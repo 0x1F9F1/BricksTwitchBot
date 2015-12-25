@@ -65,7 +65,10 @@
                 </Grid>
             </TabItem>
             <TabItem Header="Options" HorizontalAlignment="Left" VerticalAlignment="Top">
-                <Grid Background="#FFE5E5E5"/>
+                <Grid Background="#FFE5E5E5">
+                    <Slider x:Name="MaxLinesSlider" Margin="72,5,5,0" VerticalAlignment="Top" Height="23" Maximum="1000" Minimum="50" SmallChange="10" LargeChange="100" Value="500" LostFocus="MaxLinesSlider_LostFocus"/>
+                    <Label x:Name="MaxLinesLabel" Content="Max Lines" Margin="5,5,0,0" VerticalAlignment="Top" Height="23" HorizontalAlignment="Left" Width="62"/>
+                </Grid>
             </TabItem>
         </TabControl>
     </Grid>

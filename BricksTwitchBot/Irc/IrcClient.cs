@@ -7,7 +7,7 @@ namespace BricksTwitchBot.Irc
 {
     public class IrcClient
     {
-        private readonly string _channel;
+        private string _channel;
 
         public StreamReader StreamReader;
         public StreamWriter StreamWriter;
@@ -24,8 +24,6 @@ namespace BricksTwitchBot.Irc
                 AutoFlush = true
             };
 
-            _channel = channel.ToLower();
-
             WriteOther("CAP REQ :twitch.tv/membership");
             WriteOther("CAP REQ :twitch.tv/commands");
             WriteOther("CAP REQ :twitch.tv/tags");
@@ -40,6 +38,12 @@ namespace BricksTwitchBot.Irc
                 WriteOther($"NICK {username.ToLower()}");
             }
 
+            JoinChannel(channel);
+        }
+
+        public void JoinChannel(string channel)
+        {
+            _channel = channel.ToLower();
             WriteOther($"JOIN #{_channel}");
         }
 
@@ -59,10 +63,11 @@ namespace BricksTwitchBot.Irc
                 return data;
 
             }
-            catch (IOException)
+            catch (Exception) // Just ignore any bad data
             {
                 return null;
             }
+
         }
 
         public void WriteOther(string other)

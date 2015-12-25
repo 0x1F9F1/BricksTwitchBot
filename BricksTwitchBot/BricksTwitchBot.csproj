@@ -86,7 +86,6 @@
     <Compile Include="Globals.cs" />
     <Compile Include="Irc\DataHandler.cs" />
     <Compile Include="Irc\IrcClient.cs" />
-    <Compile Include="Irc\MessageHandler.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
