@@ -335,21 +335,21 @@ namespace BricksTwitchBot.Irc
                     #region Regular Emote Handler
 
 
-                    foreach (Match urlMatch in Globals.UrlRegex.Matches(range.Text))
-                    {
-                        var urlStart = range.Start.GetPositionAtOffset(urlMatch.Index);
-                        var urlEnd = urlStart.GetPositionAtOffset(urlMatch.Length);
+                    //foreach (Match urlMatch in Globals.UrlRegex.Matches(range.Text))
+                    //{
+                    //    var urlStart = range.Start.GetPositionAtOffset(urlMatch.Index);
+                    //    var urlEnd = urlStart.GetPositionAtOffset(urlMatch.Length);
 
-                        Hyperlink hyperlink = new Hyperlink(urlStart, urlEnd);
+                    //    Hyperlink hyperlink = new Hyperlink(urlStart, urlEnd);
 
-                        hyperlink.NavigateUri = new Uri(urlMatch.Value, UriKind.RelativeOrAbsolute);
+                    //    hyperlink.NavigateUri = new Uri(urlMatch.Value, UriKind.RelativeOrAbsolute);
 
-                        hyperlink.RequestNavigate += delegate (object sender, RequestNavigateEventArgs args)
-                        {
-                            Process.Start(urlMatch.Value);
-                        };
+                    //    hyperlink.RequestNavigate += delegate (object sender, RequestNavigateEventArgs args)
+                    //    {
+                    //        Process.Start(urlMatch.Value);
+                    //    };
 
-                    }
+                    //}
 
                     if (match.Groups["emote"].Success)
                     {
@@ -399,22 +399,24 @@ namespace BricksTwitchBot.Irc
 
                     #endregion
 
-                    if (emoteList.Count > 0)
+                    foreach (var emote in emoteList.OrderBy(s => s.Start).Reverse())
                     {
-                        foreach (var emote in emoteList.OrderBy(s => s.Start).Reverse())
+                        var imageStart = range.Start.GetPositionAtOffset(emote.Start); // Get the start of the emote
+                        var imageEnd = range.Start.GetPositionAtOffset(emote.End); // Get the end of the emote
+                        var imageRange = new TextRange(imageStart, imageEnd); // Clear the text of the emote
+
+                        var imageText = imageRange.Text;
+
+                        var imageToolTip = Globals.InstaToolTip(imageText);
+
+                        imageRange.Text = string.Empty;
+
+                        var imageContainer = new InlineUIContainer(emote.Image, imageStart)
                         {
-                            var imageStart = range.Start.GetPositionAtOffset(emote.Start); // Get the start of the emote
-                            var imageEnd = range.Start.GetPositionAtOffset(emote.End); // Get the end of the emote
-                            var imageRange = new TextRange(imageStart, imageEnd); // Clear the text of the emote
+                            ToolTip = imageToolTip
+                        };
 
-                            var imageContainer = new InlineUIContainer(emote.Image, imageStart)
-                            {
-                                ToolTip = Globals.InstaToolTip(imageRange.Text)
-                            };
-
-
-                            imageRange.Text = string.Empty;
-                        }
+                        imageContainer.Tag = imageText;
                     }
 
                     Globals.ChatTextBoxQueue.Enqueue(paragraph);
