@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -6,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using Newtonsoft.Json.Linq;
 
 namespace BricksTwitchBot.Irc
 {
@@ -322,6 +324,8 @@ namespace BricksTwitchBot.Irc
 
                     #region Regular Emote Handler
 
+                    var message = match.Groups["message"].Value;
+
                     var emoteRaw = match.Groups["emote"].Value;
 
                     if (!string.IsNullOrWhiteSpace(emoteRaw))
@@ -351,9 +355,26 @@ namespace BricksTwitchBot.Irc
                         }
                     }
 
+                    foreach (var bttvEmote in Globals.BetterTTVEmotes)
+                    {
+                        var url = $"https:{bttvEmote["url"].Value<string>()}";
+
+                        var matches = Regex.Matches(message, Regex.Escape(bttvEmote["regex"].Value<string>()));
+
+                        foreach (Match emoteMatch in matches)
+                        {
+                            emoteList.Add(new Emote
+                            {
+                                Start = emoteMatch.Index,
+                                End = emoteMatch.Index + emoteMatch.Length,
+                                Image = Globals.ImageFromUrl(url)
+                            });
+                        }
+                    }
+
                     #endregion
 
-                    var messageParagraph = new Paragraph(new Run(match.Groups["message"].Value));
+                    var messageParagraph = new Paragraph(new Run(message));
 
                     if (emoteList.Count > 0)
                     {

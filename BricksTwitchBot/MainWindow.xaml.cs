@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.IO;
+using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -10,6 +11,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using BricksTwitchBot.Irc;
+using Newtonsoft.Json.Linq;
 using SharpConfig;
 
 namespace BricksTwitchBot
@@ -56,8 +58,16 @@ MaxLines = 100");
             Globals.ChatStatusBox = ChatStatusBox;
 
             Globals.FontFamily = new FontFamily("Helvetica Neue");
+            Globals.TimeBrush = new SolidColorBrush(Colors.Gray);
 
-            UsernameInputBox.Text =         Globals.OptionsConfig["Options"]["Username"].StringValue;
+            using (var webClient = new WebClient())
+            {
+                Globals.BetterTTVEmotes = JObject.Parse(webClient.DownloadString("https://api.betterttv.net/1/emotes"))["emotes"].Value<JArray>();
+            }
+
+            Globals.Log(Globals.BetterTTVEmotes.ToString());
+
+            UsernameInputBox.Text = Globals.OptionsConfig["Options"]["Username"].StringValue;
             OauthInputBox.Password =        Globals.OptionsConfig["Options"]["Oauth"].StringValue;
             ChannelToJoinInput.Text =       Globals.OptionsConfig["Options"]["ChannelToJoin"].StringValue;
             AutoConnectCheckBox.IsChecked = Globals.OptionsConfig["Options"]["Auto-Connect"].BoolValue;
@@ -161,6 +171,7 @@ MaxLines = 100");
                 if (Globals.LogTextBoxQueue.TryDequeue(out paragraph))
                 {
                     AddToTextBox(LogTextBox, paragraph, true);
+                    Globals.LogWriter.WriteLine(new TextRange(paragraph.ContentStart, paragraph.ContentEnd).Text);
                     Thread.Sleep(10);
                 }
                 else
@@ -178,7 +189,7 @@ MaxLines = 100");
                 new Run($"{DateTime.Now:t} ")
                 {
                     FontSize = 9.0,
-                    Foreground = new SolidColorBrush(Colors.Gray)
+                    Foreground = Globals.TimeBrush
                 });
                 paragraph.FontFamily = Globals.FontFamily;
 
@@ -196,11 +207,11 @@ MaxLines = 100");
                         {
                             textbox.ScrollToEnd();
                         }
+                    }
 
-                        if (textbox.Document.Blocks.Count > MaxLinesSlider.Value)
-                        {
-                            textbox.Document.Blocks.Remove(textbox.Document.Blocks.FirstBlock);
-                        }
+                    if (textbox.Document.Blocks.Count > MaxLinesSlider.Value)
+                    {
+                        textbox.Document.Blocks.Remove(textbox.Document.Blocks.FirstBlock);
                     }
                 });
             });
@@ -325,6 +336,8 @@ MaxLines = 100");
             Disconnect();
 
             Globals.SaveConfig();
+
+            Globals.Log("Closing Application");
 
             Globals.LogWriter.Close();
         }

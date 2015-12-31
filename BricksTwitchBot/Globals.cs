@@ -10,6 +10,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using BricksTwitchBot.Irc;
+using Newtonsoft.Json.Linq;
 using SharpConfig;
 
 namespace BricksTwitchBot
@@ -49,6 +50,10 @@ namespace BricksTwitchBot
         public static bool Running;
 
         public static FontFamily FontFamily;
+        public static SolidColorBrush TimeBrush;
+
+        public static JArray BetterTTVEmotes;
+
         public static StreamWriter LogWriter;
 
         public static Image ImageFromUrl(string url)
@@ -108,9 +113,9 @@ namespace BricksTwitchBot
             Log("Saved Config");
         }
 
-        public static void Log(object obj)
+        public static void Log(string obj)
         {
-            LogWriter?.WriteLine("{0:t} | {1}", DateTime.Now, obj);
+            LogTextBoxQueue.Enqueue(new Paragraph(new Run(obj)));
         }
     }
 }
