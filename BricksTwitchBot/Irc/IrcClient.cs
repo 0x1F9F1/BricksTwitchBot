@@ -38,12 +38,8 @@ namespace BricksTwitchBot.Irc
                 WriteOther($"NICK {username.ToLower()}");
             }
 
-            JoinChannel(channel);
-        }
-
-        public void JoinChannel(string channel)
-        {
             _channel = channel.ToLower();
+
             WriteOther($"JOIN #{_channel}");
         }
 
@@ -52,22 +48,24 @@ namespace BricksTwitchBot.Irc
             try
             {
                 string data = StreamReader.ReadLine();
-                Match match;
 
-                if (data != null && (match = Globals.PingMatch.Match(data)).Success)
+                if (data != null)
                 {
-                    WriteOther($"PONG {match.Groups["ip"].Value}");
-                    return null;
+                    Match match = Globals.PingMatch.Match(data);
+                    if (match.Success)
+                    {
+                        WriteOther($"PONG {match.Groups["ip"].Value}");
+                        return null;
+                    }
                 }
 
                 return data;
-
             }
-            catch (Exception) // Just ignore any bad data
+            catch (IOException e) // Just ignore any bad data
             {
+                Globals.Log($"[EXCEPTION] | { e.Message }");
                 return null;
             }
-
         }
 
         public void WriteOther(string other)

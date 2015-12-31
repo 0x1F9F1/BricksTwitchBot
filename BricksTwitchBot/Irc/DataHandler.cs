@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace BricksTwitchBot.Irc
@@ -265,7 +266,7 @@ namespace BricksTwitchBot.Irc
 
         public static void HandleMessage(string data)
         {
-            Match match = Globals.MessageMatch.Match(data);
+            var match = Globals.MessageMatch.Match(data);
 
             if (match.Success)
             {
@@ -319,6 +320,8 @@ namespace BricksTwitchBot.Irc
 
                     var emoteList = new List<Emote>();
 
+                    #region Regular Emote Handler
+
                     var emoteRaw = match.Groups["emote"].Value;
 
                     if (!string.IsNullOrWhiteSpace(emoteRaw))
@@ -327,9 +330,11 @@ namespace BricksTwitchBot.Irc
                         {
                             var emoteSplitIdAndIndexs = splitEmoteString.Split(':'); // Split ID and Positions
 
-                            foreach (var emoteIndexBeginAndEnd in emoteSplitIdAndIndexs[1].Split(',')) // Split position list
+                            foreach (var emoteIndexBeginAndEnd in emoteSplitIdAndIndexs[1].Split(','))
+                                // Split position list
                             {
-                                var emoteIndexBeginAndEndSplit = emoteIndexBeginAndEnd.Split('-'); // Split beginning and end
+                                var emoteIndexBeginAndEndSplit = emoteIndexBeginAndEnd.Split('-');
+                                    // Split beginning and end
 
                                 var emoteStart = int.Parse(emoteIndexBeginAndEndSplit[0]);
                                 var emoteEnd = int.Parse(emoteIndexBeginAndEndSplit[1]) + 1;
@@ -338,27 +343,34 @@ namespace BricksTwitchBot.Irc
                                 {
                                     Start = emoteStart,
                                     End = emoteEnd,
-                                    Image = Globals.ImageFromUrl($"https://static-cdn.jtvnw.net/emoticons/v1/{ emoteSplitIdAndIndexs[0] }/1.0")
+                                    Image =
+                                        Globals.ImageFromUrl(
+                                            $"https://static-cdn.jtvnw.net/emoticons/v1/{emoteSplitIdAndIndexs[0]}/1.0")
                                 });
                             }
                         }
+                    }
 
-                        var message = new Paragraph(new Run(match.Groups["message"].Value));
+                    #endregion
 
-                        var range = new TextRange(message.ContentStart, message.ContentEnd);
+                    var messageParagraph = new Paragraph(new Run(match.Groups["message"].Value));
 
-                        foreach (var emote in emoteList.OrderBy(s => s.Start).Reverse()) // Reverse so positions do not get messed up
+                    if (emoteList.Count > 0)
+                    {
+                        var range = new TextRange(messageParagraph.ContentStart, messageParagraph.ContentEnd);
+
+                        foreach (var emote in emoteList.OrderBy(s => s.Start).Reverse())
                         {
-                            var imageStart = range.Start.GetPositionAtOffset(emote.Start);
-                            var imageEnd = range.Start.GetPositionAtOffset(emote.End);
-                            var imageRange = new TextRange(imageStart, imageEnd) { Text = "" }; // Wipe the text where the image is going to go
+                            var imageStart = range.Start.GetPositionAtOffset(emote.Start); // Get the start of the emote
+                            var imageEnd = range.Start.GetPositionAtOffset(emote.End); // Get the end of the emote
+                            var imageRange = new TextRange(imageStart, imageEnd) { Text = string.Empty }; // Get the range of text between start and end
                             var imageContainer = new InlineUIContainer(emote.Image, imageStart);
                         }
-
-                        paragraph.Inlines.AddRange(message.Inlines.ToArray()); // Have to call .ToArray() to fix 'collection was edit' bug
-
-                        Globals.ChatTextBoxQueue.Enqueue(paragraph);
                     }
+
+                    paragraph.Inlines.AddRange(messageParagraph.Inlines.ToArray());
+
+                    Globals.ChatTextBoxQueue.Enqueue(paragraph);
                 });
             }
         }
