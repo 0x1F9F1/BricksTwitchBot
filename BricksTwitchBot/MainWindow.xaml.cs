@@ -65,9 +65,7 @@ MaxLines = 100");
                 Globals.BetterTTVEmotes = JObject.Parse(webClient.DownloadString("https://api.betterttv.net/1/emotes"))["emotes"].Value<JArray>();
             }
 
-            Globals.Log(Globals.BetterTTVEmotes.ToString());
-
-            UsernameInputBox.Text = Globals.OptionsConfig["Options"]["Username"].StringValue;
+            UsernameInputBox.Text =         Globals.OptionsConfig["Options"]["Username"].StringValue;
             OauthInputBox.Password =        Globals.OptionsConfig["Options"]["Oauth"].StringValue;
             ChannelToJoinInput.Text =       Globals.OptionsConfig["Options"]["ChannelToJoin"].StringValue;
             AutoConnectCheckBox.IsChecked = Globals.OptionsConfig["Options"]["Auto-Connect"].BoolValue;

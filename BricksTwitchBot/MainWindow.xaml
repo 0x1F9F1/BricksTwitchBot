@@ -12,7 +12,7 @@
                 <Grid Background="#FFE5E5E5">
                     <RichTextBox x:Name="ChatTextBox" Margin="5,5,5,36" Block.LineHeight="4" IsReadOnly="true"
                        TextOptions.TextFormattingMode="Display" VerticalContentAlignment="Center"
-                       VerticalScrollBarVisibility="Visible">
+                       VerticalScrollBarVisibility="Visible" IsDocumentEnabled="True">
                         <FlowDocument>
                             <Paragraph/>
                         </FlowDocument>

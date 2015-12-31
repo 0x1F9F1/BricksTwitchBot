@@ -5,7 +5,9 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
@@ -17,7 +19,7 @@ namespace BricksTwitchBot
 {
     internal static class Globals
     {
-        public static readonly Regex MessageMatch =         new Regex(@"^@color=(?<color>#\w{6})?;display-name=(?<name>[^;]+)?;emotes=(?<emote>[^;]*);(?:sent-ts=\d+;)?subscriber=(?<issub>[01]);(?:tmi-sent-ts=\d+;)?turbo=(?<isturbo>[01]);user-id=(?<userid>\d+);?user-type=(?<usertype>\S*) :(?<secondname>\S+)!\S+@\S+\.tmi\.twitch\.tv PRIVMSG #\w+ :(?<message>.+)$", RegexOptions.Compiled);
+        public static readonly Regex MessageMatch =         new Regex(@"^@color=(?<color>#\w{6})?;display-name=(?<name>[^;]+)?;emotes=(?<emote>[^;]+)?;(?:sent-ts=\d+;)?subscriber=(?<issub>[01]);(?:tmi-sent-ts=\d+;)?turbo=(?<isturbo>[01]);user-id=(?<userid>\d+);?user-type=(?<usertype>\S*) :(?<secondname>\S+)!\S+@\S+\.tmi\.twitch\.tv PRIVMSG #\w+ :(?<message>.+)$", RegexOptions.Compiled);
         public static readonly Regex ModeMatch =            new Regex(@":jtv MODE #\S+ (?<change>[+-])o (?<user>\S+)", RegexOptions.Compiled);
         public static readonly Regex PingMatch =            new Regex(@"PING :(?<ip>\S+)", RegexOptions.Compiled);
         public static readonly Regex TimeoutMatch =         new Regex(@":tmi\.twitch\.tv CLEARCHAT #\S+ :(?<user>\S+)", RegexOptions.Compiled);
@@ -33,8 +35,7 @@ namespace BricksTwitchBot
         public static readonly Regex RoomStateMatch =       new Regex(@"@(?:broadcaster-lang=(?<lang>[^;]*);?)?(?:r9k=(?<isr9k>[01]);?)?(?:slow=(?<isSlow>\d+);?)?(?:subs-only=(?<isSub>[01]);?)? :tmi\.twitch\.tv ROOMSTATE #\S+$", RegexOptions.Compiled);
         public static readonly Regex NoticeMatch =          new Regex(@"@msg-id=(?<msgid>\S+) :tmi\.twitch\.tv NOTICE #\S+ :(?<message>.+)", RegexOptions.Compiled);
 
-        public static readonly Regex UrlRegex = new Regex(@"\S+[.]\S+", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        public static readonly Regex EmailRegex = new Regex(@"([a-zA-Z_0-9.-]+\@[a-zA-Z_0-9.-]+\.\w+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        public static readonly Regex UrlRegex =             new Regex(@"(?#Protocol)(?:(?:ht|f)tp(?:s?)\:\/\/|~\/|\/)?(?#Username:Password)(?:\w+:\w+@)?(?#Subdomains)(?:(?:[-\w]+\.)+(?#TopLevel Domains)(?:com|org|net|gov|mil|biz|info|mobi|name|aero|jobs|museum|travel|[a-z]{2}))(?#Port)(?::[\d]{1,5})?(?#Directories)(?:(?:(?:\/(?:[-\w~!$+|.,=]|%[a-f\d]{2})+)+|\/)+|\?|#)?(?#Query)(?:(?:\?(?:[-\w~!$+|.,*:]|%[a-f\d{2}])+=?(?:[-\w~!$+|.,*:=]|%[a-f\d]{2})*)(?:&(?:[-\w~!$+|.,*:]|%[a-f\d{2}])+=?(?:[-\w~!$+|.,*:=]|%[a-f\d]{2})*)*)*(?#Anchor)(?:#(?:[-\w~!$+|.,*:=]|%[a-f\d]{2})*)?", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         public static ConcurrentQueue<Paragraph> ChatTextBoxQueue = new ConcurrentQueue<Paragraph>();
         public static ConcurrentQueue<Paragraph> LogTextBoxQueue =  new ConcurrentQueue<Paragraph>();
@@ -116,6 +117,16 @@ namespace BricksTwitchBot
         public static void Log(string obj)
         {
             LogTextBoxQueue.Enqueue(new Paragraph(new Run(obj)));
+        }
+
+        public static ToolTip InstaToolTip(string text)
+        {
+            var toolTip = new ToolTip {Content = text};
+
+            ToolTipService.SetInitialShowDelay(toolTip, 0);
+            ToolTipService.SetBetweenShowDelay(toolTip, 0);
+
+            return toolTip;
         }
     }
 }

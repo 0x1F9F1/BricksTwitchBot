@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -7,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Navigation;
 using Newtonsoft.Json.Linq;
 
 namespace BricksTwitchBot.Irc
@@ -322,14 +324,37 @@ namespace BricksTwitchBot.Irc
 
                     var emoteList = new List<Emote>();
 
-                    #region Regular Emote Handler
-
                     var message = match.Groups["message"].Value;
 
-                    var emoteRaw = match.Groups["emote"].Value;
+                    var messageRun = new Run(message);
 
-                    if (!string.IsNullOrWhiteSpace(emoteRaw))
+                    paragraph.Inlines.Add(messageRun);
+
+                    var range = new TextRange(messageRun.ContentStart, messageRun.ContentEnd);
+
+                    #region Regular Emote Handler
+
+
+                    foreach (Match urlMatch in Globals.UrlRegex.Matches(range.Text))
                     {
+                        var urlStart = range.Start.GetPositionAtOffset(urlMatch.Index);
+                        var urlEnd = urlStart.GetPositionAtOffset(urlMatch.Length);
+
+                        Hyperlink hyperlink = new Hyperlink(urlStart, urlEnd);
+
+                        hyperlink.NavigateUri = new Uri(urlMatch.Value, UriKind.RelativeOrAbsolute);
+
+                        hyperlink.RequestNavigate += delegate (object sender, RequestNavigateEventArgs args)
+                        {
+                            Process.Start(urlMatch.Value);
+                        };
+
+                    }
+
+                    if (match.Groups["emote"].Success)
+                    {
+                        var emoteRaw = match.Groups["emote"].Value;
+
                         foreach (var splitEmoteString in emoteRaw.Split('/')) // Split emotes
                         {
                             var emoteSplitIdAndIndexs = splitEmoteString.Split(':'); // Split ID and Positions
@@ -374,22 +399,23 @@ namespace BricksTwitchBot.Irc
 
                     #endregion
 
-                    var messageParagraph = new Paragraph(new Run(message));
-
                     if (emoteList.Count > 0)
                     {
-                        var range = new TextRange(messageParagraph.ContentStart, messageParagraph.ContentEnd);
-
                         foreach (var emote in emoteList.OrderBy(s => s.Start).Reverse())
                         {
                             var imageStart = range.Start.GetPositionAtOffset(emote.Start); // Get the start of the emote
                             var imageEnd = range.Start.GetPositionAtOffset(emote.End); // Get the end of the emote
-                            var imageRange = new TextRange(imageStart, imageEnd) { Text = string.Empty }; // Get the range of text between start and end
-                            var imageContainer = new InlineUIContainer(emote.Image, imageStart);
+                            var imageRange = new TextRange(imageStart, imageEnd); // Clear the text of the emote
+
+                            var imageContainer = new InlineUIContainer(emote.Image, imageStart)
+                            {
+                                ToolTip = Globals.InstaToolTip(imageRange.Text)
+                            };
+
+
+                            imageRange.Text = string.Empty;
                         }
                     }
-
-                    paragraph.Inlines.AddRange(messageParagraph.Inlines.ToArray());
 
                     Globals.ChatTextBoxQueue.Enqueue(paragraph);
                 });
