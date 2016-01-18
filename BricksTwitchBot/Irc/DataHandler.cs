@@ -20,6 +20,7 @@ namespace BricksTwitchBot.Irc
         public static void HandleData(string data)
         {
             Match match;
+
             if ((match = Globals.MessageMatch.Match(data)).Success)
             {
                 // Ignored due to 2 connections
@@ -276,14 +277,26 @@ namespace BricksTwitchBot.Irc
             {
                 Globals.OnUi(delegate
                 {
-                    var paragraph = new Paragraph();
+                var paragraph = new Paragraph();
+
+                string name = (
+                        match.Groups["name"].Success // If getting the first name is a success (the field isn't empty)
+                        ? match.Groups["name"].Value // Use the first name
+                        : match.Groups["secondname"].Value) // Else use the 'fallback' name
+                        .Replace(@"\s", " ");
+
+                    if (name.ToLower() == match.Groups["channel"].Value)
+                    {
+                        paragraph.Inlines.Add(Globals.FromResource("Images.Broadcaster.png"));
+                        paragraph.Inlines.Add(new Run(" "));
+                    }
 
                     switch (match.Groups["usertype"].Value)
                     {
-                        case "mod":
-                            paragraph.Inlines.Add(Globals.FromResource("Images.Moderator.png"));
-                            paragraph.Inlines.Add(new Run(" "));
-                            break;
+                        //case "mod":
+                        //    paragraph.Inlines.Add(Globals.FromResource("Images.Moderator.png"));
+                        //    paragraph.Inlines.Add(new Run(" "));
+                        //    break;
                         case "admin":
                             paragraph.Inlines.Add(Globals.FromResource("Images.Admin.png"));
                             paragraph.Inlines.Add(new Run(" "));
@@ -298,6 +311,11 @@ namespace BricksTwitchBot.Irc
                             break;
                     }
 
+                    if (match.Groups["ismod"].Value.Equals("1"))
+                    {
+                        paragraph.Inlines.Add(Globals.FromResource("Images.Moderator.png"));
+                        paragraph.Inlines.Add(new Run(" "));
+                    }
                     if (match.Groups["isturbo"].Value.Equals("1"))
                     {
                         paragraph.Inlines.Add(Globals.FromResource("Images.Turbo.png"));
@@ -309,11 +327,7 @@ namespace BricksTwitchBot.Irc
                         paragraph.Inlines.Add(new Run(" "));
                     }
 
-                    paragraph.Inlines.Add(new Run((
-                        match.Groups["name"].Success // If getting the first name is a success (the field isn't empty)
-                            ? match.Groups["name"].Value // Use the first name
-                            : match.Groups["secondname"].Value) // Else use the 'fallback' name
-                        .Replace(@"\s", " ")) // Replace \s (space) with a space (only needed for usernames)
+                    paragraph.Inlines.Add(new Run(name) // Replace \s (space) with a space (only needed for usernames)
                     {
                         Foreground = Globals.RgbToBrush(match.Groups["color"].Value),
                         // Remember to use the color of their name
@@ -326,30 +340,15 @@ namespace BricksTwitchBot.Irc
 
                     var message = match.Groups["message"].Value;
 
+                    var messageParagraph = new Paragraph();
+
+                    var messageRange = new TextRange(messageParagraph.ContentStart, messageParagraph.ContentEnd);
+
                     var messageRun = new Run(message);
 
-                    paragraph.Inlines.Add(messageRun);
-
-                    var range = new TextRange(messageRun.ContentStart, messageRun.ContentEnd);
+                    messageParagraph.Inlines.Add(messageRun);
 
                     #region Regular Emote Handler
-
-
-                    //foreach (Match urlMatch in Globals.UrlRegex.Matches(range.Text))
-                    //{
-                    //    var urlStart = range.Start.GetPositionAtOffset(urlMatch.Index);
-                    //    var urlEnd = urlStart.GetPositionAtOffset(urlMatch.Length);
-
-                    //    Hyperlink hyperlink = new Hyperlink(urlStart, urlEnd);
-
-                    //    hyperlink.NavigateUri = new Uri(urlMatch.Value, UriKind.RelativeOrAbsolute);
-
-                    //    hyperlink.RequestNavigate += delegate (object sender, RequestNavigateEventArgs args)
-                    //    {
-                    //        Process.Start(urlMatch.Value);
-                    //    };
-
-                    //}
 
                     if (match.Groups["emote"].Success)
                     {
@@ -399,25 +398,25 @@ namespace BricksTwitchBot.Irc
 
                     #endregion
 
+                    Globals.Log(new TextRange(messageRun.ContentStart, messageRun.ContentEnd).Text);
+
                     foreach (var emote in emoteList.OrderBy(s => s.Start).Reverse())
                     {
-                        var imageStart = range.Start.GetPositionAtOffset(emote.Start); // Get the start of the emote
-                        var imageEnd = range.Start.GetPositionAtOffset(emote.End); // Get the end of the emote
+                        var imageStart = messageRange.Start.GetPositionAtOffset(emote.Start); // Get the start of the emote
+                        var imageEnd = messageRange.End.GetPositionAtOffset(emote.End); // Get the end of the emote
                         var imageRange = new TextRange(imageStart, imageEnd); // Clear the text of the emote
 
                         var imageText = imageRange.Text;
-
-                        var imageToolTip = Globals.InstaToolTip(imageText);
 
                         imageRange.Text = string.Empty;
 
                         var imageContainer = new InlineUIContainer(emote.Image, imageStart)
                         {
-                            ToolTip = imageToolTip
+                            ToolTip = Globals.InstaToolTip(imageText)
                         };
-
-                        imageContainer.Tag = imageText;
                     }
+
+                    paragraph.Inlines.AddRange(messageParagraph.Inlines.ToArray());
 
                     Globals.ChatTextBoxQueue.Enqueue(paragraph);
                 });

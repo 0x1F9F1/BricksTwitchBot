@@ -10,9 +10,8 @@
         <TabControl x:Name="TabControl" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch">
             <TabItem Header="Chat">
                 <Grid Background="#FFE5E5E5">
-                    <RichTextBox x:Name="ChatTextBox" Margin="5,5,5,36" Block.LineHeight="4" IsReadOnly="true"
-                       TextOptions.TextFormattingMode="Display" VerticalContentAlignment="Center"
-                       VerticalScrollBarVisibility="Visible" IsDocumentEnabled="True">
+                    <RichTextBox x:Name="ChatTextBox" Margin="5,5,5,36" IsReadOnly="true" VerticalContentAlignment="Center"
+                       VerticalScrollBarVisibility="Visible" IsDocumentEnabled="True" Block.LineHeight="1">
                         <FlowDocument>
                             <Paragraph/>
                         </FlowDocument>

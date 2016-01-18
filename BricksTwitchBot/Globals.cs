@@ -19,7 +19,7 @@ namespace BricksTwitchBot
 {
     internal static class Globals
     {
-        public static readonly Regex MessageMatch =         new Regex(@"^@color=(?<color>#\w{6})?;display-name=(?<name>[^;]+)?;emotes=(?<emote>[^;]+)?;(?:sent-ts=\d+;)?subscriber=(?<issub>[01]);(?:tmi-sent-ts=\d+;)?turbo=(?<isturbo>[01]);user-id=(?<userid>\d+);?user-type=(?<usertype>\S*) :(?<secondname>\S+)!\S+@\S+\.tmi\.twitch\.tv PRIVMSG #\w+ :(?<message>.+)$", RegexOptions.Compiled);
+        public static readonly Regex MessageMatch =         new Regex(@"^@color=(?<color>#\w{6})?;display-name=(?<name>[^;]+)?;emotes=(?<emote>[^;]+)?;(?:sent-ts=\d+;)?mod=(?<ismod>[01]);subscriber=(?<issub>[01]);(?:tmi-sent-ts=\d+;)?turbo=(?<isturbo>[01]);user-id=(?<userid>\d+);?user-type=(?<usertype>\S*) :(?<secondname>\S+)!\S+@\S+\.tmi\.twitch\.tv PRIVMSG #(?<channel>\w+) :(?<message>.+)$", RegexOptions.Compiled);
         public static readonly Regex ModeMatch =            new Regex(@":jtv MODE #\S+ (?<change>[+-])o (?<user>\S+)", RegexOptions.Compiled);
         public static readonly Regex PingMatch =            new Regex(@"PING :(?<ip>\S+)", RegexOptions.Compiled);
         public static readonly Regex TimeoutMatch =         new Regex(@":tmi\.twitch\.tv CLEARCHAT #\S+ :(?<user>\S+)", RegexOptions.Compiled);
@@ -103,14 +103,13 @@ namespace BricksTwitchBot
 
         public static Stream GetResourceStream(string path)
         {
-            Assembly assembly = Assembly.GetExecutingAssembly();
+            var assembly = Assembly.GetExecutingAssembly();
             return assembly.GetManifestResourceStream($"{assembly.GetName().Name}.{path}");
         }
 
         public static void SaveConfig()
         {
             OptionsConfig.SaveToFile("TwitchBot.ini");
-
             Log("Saved Config");
         }
 
@@ -121,7 +120,7 @@ namespace BricksTwitchBot
 
         public static ToolTip InstaToolTip(string text)
         {
-            var toolTip = new ToolTip {Content = text};
+            var toolTip = new ToolTip { Content = text };
 
             ToolTipService.SetInitialShowDelay(toolTip, 0);
             ToolTipService.SetBetweenShowDelay(toolTip, 0);

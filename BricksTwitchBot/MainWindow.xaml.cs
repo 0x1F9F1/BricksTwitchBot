@@ -108,6 +108,7 @@ MaxLines = 100");
                     {
                         DataHandler.HandleData(data);
                     }
+
                     Globals.LogTextBoxQueue.Enqueue(new Paragraph(new Run(data)));
                 }
                 else
@@ -194,24 +195,21 @@ MaxLines = 100");
                 var textRange = new TextRange(paragraph.ContentStart, paragraph.ContentEnd);
                 textRange.ApplyPropertyValue(Inline.BaselineAlignmentProperty, BaselineAlignment.Center);
 
-                textbox.Dispatcher.Invoke(delegate
+                textbox.Document.Blocks.Add(paragraph);
+
+                if (scroll)
                 {
-                    textbox.Document.Blocks.Add(paragraph);
-
-                    if (scroll)
+                    if ((!textbox.IsSelectionActive || ChatTextBox.Selection.Text.Length == 0) &&
+                        !(textbox.VerticalOffset + textbox.ViewportHeight < ChatTextBox.ExtentHeight - 50.0))
                     {
-                        if ((!textbox.IsSelectionActive || ChatTextBox.Selection.Text.Length == 0) &&
-                            !(textbox.VerticalOffset + textbox.ViewportHeight < ChatTextBox.ExtentHeight - 50.0))
-                        {
-                            textbox.ScrollToEnd();
-                        }
+                        textbox.ScrollToEnd();
                     }
+                }
 
-                    if (textbox.Document.Blocks.Count > MaxLinesSlider.Value)
-                    {
-                        textbox.Document.Blocks.Remove(textbox.Document.Blocks.FirstBlock);
-                    }
-                });
+                if (textbox.Document.Blocks.Count > MaxLinesSlider.Value)
+                {
+                    textbox.Document.Blocks.Remove(textbox.Document.Blocks.FirstBlock);
+                }
             });
         }
 
@@ -343,6 +341,7 @@ MaxLines = 100");
         private void MaxLinesSlider_LostFocus(object sender, RoutedEventArgs e)
         {
             Globals.OptionsConfig["Options"]["MaxLines"].DoubleValue = MaxLinesSlider.Value;
+            ChatTextBox.Document.Blocks.Clear();
             Globals.SaveConfig();
         }
     }
